@@ -7,6 +7,7 @@ export const accounts = mysqlTable('accounts', {
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   email: varchar('email', { length: 190 }),
   isBanned: boolean('is_banned').notNull().default(false),
+  adminLevel: int('admin_level', { unsigned: true }).notNull().default(0),
   createdAt: datetime('created_at', { mode: 'date' }).notNull().defaultNow(),
   lastLoginAt: datetime('last_login_at', { mode: 'date' })
 }, (table) => [index('accounts_email_idx').on(table.email)]);
@@ -30,8 +31,4 @@ export const characters = mysqlTable('characters', {
   createdAt: datetime('created_at', { mode: 'date' }).notNull().defaultNow(),
   lastPlayedAt: datetime('last_played_at', { mode: 'date' }),
   deletedAt: datetime('deleted_at', { mode: 'date' })
-}, (table) => [
-  index('characters_account_idx').on(table.accountId),
-  uniqueIndex('characters_account_slot_uq').on(table.accountId, table.slot),
-  uniqueIndex('characters_name_uq').on(table.firstName, table.lastName)
-]);
+}, (table) => [index('characters_account_idx').on(table.accountId), uniqueIndex('characters_account_slot_uq').on(table.accountId, table.slot), uniqueIndex('characters_name_uq').on(table.firstName, table.lastName)]);

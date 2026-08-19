@@ -9,53 +9,28 @@ import { VehicleService } from './modules/vehicles/vehicle.service';
 import { PropertyService } from './modules/properties/property.service';
 import { SocialService } from './modules/social/social.service';
 import { MarketService } from './modules/market/market.service';
+import { PhoneService } from './modules/phone/phone.service';
+import { BusinessService } from './modules/business/business.service';
+import { GovernmentService } from './modules/government/government.service';
+import { AdminService } from './modules/admin/admin.service';
 import { registerAuthEvents } from './runtime/auth.events';
 import { registerCharacterEvents } from './runtime/character.events';
 import { registerGameplayEvents } from './runtime/gameplay.events';
 import { registerWorldEvents } from './runtime/world.events';
+import { registerExtendedEvents } from './runtime/extended.events';
 import { createRateLimitStore } from './services/rate-limit';
+import { EventGuard } from './services/event-guard';
 
 async function boot(): Promise<void> {
-  const started = Date.now();
-  const config = loadConfig();
-  const logger = new Logger('server', config.logLevel);
-  const db = createDatabase(config.databaseUrl);
-  const rateLimits = await createRateLimitStore(config.redisUrl);
-  const health = await db.healthcheck();
-
-  const accounts = new AccountService(db);
-  const characters = new CharacterService(db);
-  const gameplay = new GameplayService(db);
-  const jobs = new JobService(db);
-  const vehicles = new VehicleService(db);
-  const properties = new PropertyService(db);
-  const social = new SocialService(db);
-  const market = new MarketService(db);
-
-  registerAuthEvents({ accounts, characters, rateLimits, logger: logger.child('auth'), maxAttempts: config.authMaxAttempts, lockSeconds: config.authLockSeconds });
-  registerCharacterEvents({ characters, logger: logger.child('characters') });
-  registerGameplayEvents({ gameplay, logger: logger.child('gameplay') });
-  registerWorldEvents({ jobs, vehicles, properties, social, market, logger: logger.child('world') });
-
-  mp.events.add('playerJoin', (player: PlayerMp) => {
-    player.dimension = 1000 + player.id;
-    logger.info('player connected', { player: player.name, id: player.id });
-  });
-
-  mp.events.add('playerQuit', (player: PlayerMp, exitType: string, reason: string) => {
-    logger.info('player disconnected', { player: player.name, exitType, reason });
-  });
-
-  logger.info('NOVERA RP bootstrap ready', {
-    environment: config.environment,
-    maxPlayers: config.maxPlayers,
-    dbLatencyMs: health.latencyMs,
-    rateLimitStore: rateLimits.mode,
-    bootMs: Date.now() - started
-  });
+  const started=Date.now(),config=loadConfig(),logger=new Logger('server',config.logLevel),db=createDatabase(config.databaseUrl),rateLimits=await createRateLimitStore(config.redisUrl),health=await db.healthcheck();
+  const accounts=new AccountService(db),characters=new CharacterService(db),gameplay=new GameplayService(db),jobs=new JobService(db),vehicles=new VehicleService(db),properties=new PropertyService(db),social=new SocialService(db),market=new MarketService(db),phone=new PhoneService(db),business=new BusinessService(db),government=new GovernmentService(db),admin=new AdminService(db),guard=new EventGuard();
+  registerAuthEvents({accounts,characters,rateLimits,logger:logger.child('auth'),maxAttempts:config.authMaxAttempts,lockSeconds:config.authLockSeconds});
+  registerCharacterEvents({characters,logger:logger.child('characters')});
+  registerGameplayEvents({gameplay,logger:logger.child('gameplay')});
+  registerWorldEvents({jobs,vehicles,properties,social,market,logger:logger.child('world')});
+  registerExtendedEvents({phone,business,government,admin,guard,logger:logger.child('extended')});
+  mp.events.add('playerJoin',(player:PlayerMp)=>{player.dimension=1000+player.id;logger.info('player connected',{player:player.name,id:player.id})});
+  mp.events.add('playerQuit',(player:PlayerMp,exitType:string,reason:string)=>logger.info('player disconnected',{player:player.name,exitType,reason}));
+  logger.info('NOVERA RP bootstrap ready',{environment:config.environment,maxPlayers:config.maxPlayers,dbLatencyMs:health.latencyMs,rateLimitStore:rateLimits.mode,bootMs:Date.now()-started});
 }
-
-void boot().catch((error) => {
-  console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: 'error', scope: 'server', message: 'fatal bootstrap error', error: String(error) }));
-  process.exitCode = 1;
-});
+void boot().catch((error)=>{console.error(JSON.stringify({timestamp:new Date().toISOString(),level:'error',scope:'server',message:'fatal bootstrap error',error:String(error)}));process.exitCode=1});
