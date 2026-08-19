@@ -4,7 +4,7 @@ NOVERA RP is a from-scratch GTA V Role Play project for RAGE:MP. The goal is a s
 
 ## Status
 
-**v0.3.0 — Character System Core**
+**v0.4.0 — Character Creator + GTA5HOST target**
 
 Implemented so far:
 
@@ -14,13 +14,18 @@ Implemented so far:
 - structured JSON logging;
 - MySQL connection pool + Drizzle ORM schema;
 - versioned SQL migrations;
-- Redis connection and login rate limiting;
+- optional Redis with shared-hosting in-memory rate-limit fallback;
 - Argon2id password hashing;
 - account registration/login service;
 - three server-authoritative character slots per account;
 - character create/select/soft-delete flow;
 - birth date, gender and GTA heritage/appearance persistence;
 - private creator dimensions;
+- live GTA freemode appearance preview;
+- mother/father blend, hair, colors, eyebrows, beard and eyes;
+- scripted creator camera with LMB rotation and mouse-wheel zoom;
+- cohesive CEF auth/slots/creator interface;
+- GTA5HOST RAGE:MP 1.1 old deployment target and config template;
 - ownership validation and stored spawn restoration;
 - server-authoritative shared event contracts.
 
@@ -36,6 +41,8 @@ pnpm typecheck
 pnpm build
 ```
 
-RAGE:MP runtime packaging is the next integration milestone: compiled server output will be deployed into `packages/novera`, client output into `client_packages/novera`, and the CEF build into the client package.
+Redis is optional. On a shared host without Redis, NOVERA falls back to an in-memory authentication rate-limit store. Durable state remains in MySQL.
 
-See `docs/ARCHITECTURE.md`, `docs/CHARACTERS.md` and `docs/ROADMAP.md`.
+The next milestone is the production build/packaging pipeline that assembles `packages/novera`, `client_packages/novera` and CEF assets into an FTP-ready runtime ZIP.
+
+See `docs/ARCHITECTURE.md`, `docs/CHARACTERS.md`, `docs/CHARACTER_CREATOR.md`, `docs/ROADMAP.md` and `deploy/gta5host/README.md`.
