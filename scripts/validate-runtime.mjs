@@ -4,27 +4,8 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
 const runtime = resolve(root, 'runtime');
 const required = [
-  'conf.json',
-  'novera.config.json',
-  'START_HERE.txt',
-  'packages/novera/index.js',
-  'packages/novera/package.json',
-  'client_packages/index.js',
-  'client_packages/novera/client/index.js',
-  'client_packages/novera/cef/index.html',
-  'client_packages/novera/cef/app.js',
-  'client_packages/novera/cef/device.js',
-  'migrations/ALL_MIGRATIONS.sql',
-  'migrations/0001_accounts_characters.sql',
-  'migrations/0002_character_creator.sql',
-  'migrations/0003_gameplay_core.sql',
-  'migrations/0004_extended_core.sql',
-  'migrations/0005_roleplay_core.sql',
-  'migrations/0006_onboarding_seed.sql',
-  'migrations/0007_economy_inventory_hardening.sql',
-  'migrations/0008_vehicle_system_2.sql',
-  'migrations/0009_property_housing_2.sql',
-  'migrations/0010_jobs_career_2.sql'
+  'conf.json','novera.config.json','START_HERE.txt','packages/novera/index.js','packages/novera/package.json','client_packages/index.js','client_packages/novera/client/index.js','client_packages/novera/cef/index.html','client_packages/novera/cef/app.js','client_packages/novera/cef/device.js','migrations/ALL_MIGRATIONS.sql',
+  'migrations/0001_accounts_characters.sql','migrations/0002_character_creator.sql','migrations/0003_gameplay_core.sql','migrations/0004_extended_core.sql','migrations/0005_roleplay_core.sql','migrations/0006_onboarding_seed.sql','migrations/0007_economy_inventory_hardening.sql','migrations/0008_vehicle_system_2.sql','migrations/0009_property_housing_2.sql','migrations/0010_jobs_career_2.sql'
 ];
 for (const file of required) await access(resolve(runtime, file));
 
@@ -38,13 +19,18 @@ if (!String(config.DATABASE_URL ?? '').includes('CHANGE_ME')) throw new Error('d
 if (Number(config.SERVER_PORT) !== 22620 || Number(config.SERVER_MAX_PLAYERS) !== 500) throw new Error('novera.config.json does not match hosting target');
 
 const pkg = JSON.parse(await readFile(resolve(runtime,'packages/novera/package.json'),'utf8'));
-if (pkg.version !== '0.14.1-alpha') throw new Error('runtime package version mismatch');
+if (pkg.version !== '0.14.2-alpha') throw new Error('runtime package version mismatch');
 const start = await readFile(resolve(runtime,'START_HERE.txt'),'utf8');
-if (!start.includes('v0.14.1 Alpha')) throw new Error('START_HERE version mismatch');
+if (!start.includes('v0.14.2 Alpha')) throw new Error('START_HERE version mismatch');
 
 const migrations = (await readdir(resolve(runtime,'migrations'))).filter((n)=>/^\d{4}_.+\.sql$/.test(n)).sort();
 if (migrations.length !== 10) throw new Error(`expected 10 migrations, got ${migrations.length}`);
 const combined = await readFile(resolve(runtime,'migrations/ALL_MIGRATIONS.sql'),'utf8');
 for (const migration of migrations) if (!combined.includes(`-- ${migration}`)) throw new Error(`combined migration missing ${migration}`);
+if (/\bJSON\s+(?:NOT\s+)?NULL\b/i.test(combined)) throw new Error('legacy GTA5HOST MariaDB build must not declare JSON columns');
+if (/JSON_OBJECT\s*\(/i.test(combined)) throw new Error('legacy GTA5HOST MariaDB build must not use JSON_OBJECT in migrations');
 
-console.log('NOVERA v0.14.1 Alpha GTA5HOST runtime validation passed');
+const serverBundle = await readFile(resolve(runtime,'packages/novera/index.js'),'utf8');
+if (/JSON_OBJECT\s*\(/i.test(serverBundle)) throw new Error('server runtime still depends on JSON_OBJECT');
+
+console.log('NOVERA v0.14.2 Alpha GTA5HOST legacy-MariaDB runtime validation passed');
