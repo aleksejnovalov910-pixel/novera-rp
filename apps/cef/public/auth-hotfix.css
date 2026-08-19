@@ -1,19 +1,148 @@
-/* NOVERA v0.15.3 GTA5HOST CEF rendering hotfix */
+/* NOVERA v0.15.4 GTA5HOST CEF rendering + auth/character hotfix */
 html,body,.shell{background:transparent!important}
 .auth-scene{background:transparent!important;pointer-events:auto;isolation:isolate;-webkit-user-select:none!important;user-select:none!important}
 .auth-scene input,.auth-scene textarea{-webkit-user-select:text!important;user-select:text!important}
 .auth-scene::before{background:linear-gradient(90deg,rgba(4,7,13,.74) 0%,rgba(4,7,13,.42) 34%,rgba(4,7,13,.10) 60%,rgba(4,7,13,.03) 100%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.20))!important}
 .auth-vignette{box-shadow:inset 0 0 110px rgba(0,0,0,.28)!important}
 /* Old Chromium used by GTA5HOST/RAGE can render backdrop-filter as a huge opaque black rectangle. */
-.auth-card,.server-meta{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.auth-card,.server-meta,.panel,.creator-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .auth-card{background:rgba(10,15,24,.94)!important;box-shadow:0 24px 70px rgba(0,0,0,.34)!important}
 .auth-card::after{display:none!important}
 /* Visible thin outline, transparent inside: no black panel. */
-.server-meta{background:rgba(255,255,255,.018)!important;border:1px solid rgba(225,230,255,.42)!important;border-radius:999px!important;padding:8px 13px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.035)!important}
+.server-meta{background:rgba(255,255,255,.018)!important;border:1px solid rgba(225,230,255,.42)!important;border-radius:999px!important;padding:8px 13px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.035),0 0 22px rgba(126,104,255,.12)!important}
 .server-meta .meta-separator{background:rgba(255,255,255,.24)!important}
 .auth-card.auth-busy{pointer-events:none;opacity:.86}
 .auth-primary[disabled]{cursor:wait;transform:none!important;opacity:.78}
-/* Only player-facing validation/server errors are shown here. No CEF/debug wording. */
 .auth-debug{margin-top:10px;text-align:center;font-size:10px;line-height:1.45;color:#8290a8;min-height:15px}
 .auth-debug:empty{display:none}
 .auth-debug.error{color:#ff9b9b}.auth-debug.ok{color:#8cf0ab}
+
+/* ===== Character selection: independent fullscreen scene ===== */
+#slots.slots-panel{
+  position:fixed!important;
+  inset:0!important;
+  left:0!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  max-width:none!important;
+  transform:none!important;
+  margin:0!important;
+  padding:72px 6vw 64px!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:hidden!important;
+  background:
+    linear-gradient(90deg,rgba(3,7,14,.91) 0%,rgba(3,7,14,.72) 37%,rgba(3,7,14,.38) 68%,rgba(3,7,14,.72) 100%),
+    linear-gradient(180deg,rgba(5,8,15,.30),rgba(3,6,12,.78)),
+    url('auth-bg.jpg') center center/cover no-repeat!important;
+  box-shadow:none!important;
+  z-index:70!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+#slots.slots-panel::before{
+  content:'NOVERA';
+  position:absolute;
+  top:38px;
+  left:54px;
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.20em;
+  color:#f4f6ff;
+}
+#slots.slots-panel::after{
+  content:'ВЫБЕРИ, КЕМ СТАНЕТ ТВОЯ ИСТОРИЯ';
+  position:absolute;
+  left:54px;
+  bottom:34px;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.20em;
+  color:rgba(205,213,232,.48);
+}
+#slots .header-row{
+  width:min(1180px,88vw)!important;
+  margin:0 auto 30px!important;
+  align-items:flex-end!important;
+  position:relative!important;
+  z-index:2!important;
+}
+#slots .header-row .eyebrow{font-size:10px!important;letter-spacing:.25em!important;color:#9eaaff!important;margin-bottom:10px!important}
+#slots .header-row h1{font-size:34px!important;line-height:1!important;letter-spacing:-.035em!important;color:#fff!important;margin:0!important}
+#slots .header-row>span{
+  padding:8px 12px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  background:rgba(8,12,20,.32)!important;
+  color:#c7d0df!important;
+  font-size:10px!important;
+  letter-spacing:.08em!important;
+}
+#slots .slot-grid{
+  width:min(1180px,88vw)!important;
+  margin:0 auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:18px!important;
+  position:relative!important;
+  z-index:2!important;
+}
+#slots .slot{
+  min-height:300px!important;
+  padding:24px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  background:linear-gradient(180deg,rgba(14,20,31,.92),rgba(7,11,18,.95))!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.32)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+#slots .slot:hover{transform:translateY(-5px)!important;border-color:rgba(154,166,255,.52)!important;box-shadow:0 34px 86px rgba(0,0,0,.40),0 0 0 1px rgba(127,142,255,.08)!important}
+#slots .slot.empty{
+  border-style:solid!important;
+  background:linear-gradient(180deg,rgba(18,23,34,.72),rgba(8,12,20,.86))!important;
+}
+#slots .slot.empty::before{
+  content:'+';
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  margin-bottom:24px;
+  font-size:36px;
+  line-height:1;
+  color:#b9c1ff;
+  border:1px solid rgba(164,176,255,.26);
+  background:linear-gradient(145deg,rgba(117,132,255,.20),rgba(86,72,210,.10));
+}
+#slots .slot h3{font-size:23px!important;letter-spacing:-.02em!important;margin:0 0 8px!important;color:#fff!important}
+#slots .slot p{font-size:12px!important;line-height:1.6!important;color:#8f9bad!important;margin:0!important}
+#slots .slot-actions{display:flex!important;gap:9px!important;margin-top:26px!important}
+#slots .slot-actions button{
+  min-height:44px!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-radius:12px!important;
+  background:rgba(255,255,255,.06)!important;
+  color:#dce2ee!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+  transition:.18s!important;
+}
+#slots .slot-actions button:first-child{background:linear-gradient(135deg,#e8ebff,#aeb8ff)!important;color:#101527!important;border:0!important}
+#slots .slot-actions button:hover{transform:translateY(-1px)!important;filter:brightness(1.05)!important}
+#brand{display:none!important}
+
+@media(max-width:1100px){
+  #slots.slots-panel{padding-left:4vw!important;padding-right:4vw!important}
+  #slots .header-row,#slots .slot-grid{width:92vw!important}
+  #slots .slot{min-height:270px!important}
+}
