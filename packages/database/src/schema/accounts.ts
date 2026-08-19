@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { bigint, boolean, date, datetime, double, float, index, int, json, mysqlEnum, mysqlTable, tinyint, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
 import type { CharacterAppearance } from '@novera/shared';
 
@@ -8,7 +9,7 @@ export const accounts = mysqlTable('accounts', {
   email: varchar('email', { length: 190 }),
   isBanned: boolean('is_banned').notNull().default(false),
   adminLevel: int('admin_level', { unsigned: true }).notNull().default(0),
-  createdAt: datetime('created_at', { mode: 'date' }).notNull().defaultNow(),
+  createdAt: datetime('created_at', { mode: 'date' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   lastLoginAt: datetime('last_login_at', { mode: 'date' })
 }, (table) => [index('accounts_email_idx').on(table.email)]);
 
@@ -28,7 +29,7 @@ export const characters = mysqlTable('characters', {
   posZ: double('pos_z').notNull().default(20.17),
   heading: float('heading').notNull().default(330),
   dimension: int('dimension', { unsigned: true }).notNull().default(0),
-  createdAt: datetime('created_at', { mode: 'date' }).notNull().defaultNow(),
+  createdAt: datetime('created_at', { mode: 'date' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   lastPlayedAt: datetime('last_played_at', { mode: 'date' }),
   deletedAt: datetime('deleted_at', { mode: 'date' })
 }, (table) => [index('characters_account_idx').on(table.accountId), uniqueIndex('characters_account_slot_uq').on(table.accountId, table.slot), uniqueIndex('characters_name_uq').on(table.firstName, table.lastName)]);
