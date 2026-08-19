@@ -11,6 +11,10 @@
               <PoolName>StaticBounds</PoolName>
               <PoolSize value="60000" />
             </Item>
+            <Item>
+              <PoolName>TxdStore</PoolName>
+              <PoolSize value="8000" />
+            </Item>
           </Entries>
         </PoolSizes>
       </Config>
