@@ -30,7 +30,19 @@ for (const migration of migrations) if (!combined.includes(`-- ${migration}`)) t
 if (/\bJSON\s+(?:NOT\s+)?NULL\b/i.test(combined)) throw new Error('legacy GTA5HOST MariaDB build must not declare JSON columns');
 if (/JSON_OBJECT\s*\(/i.test(combined)) throw new Error('legacy GTA5HOST MariaDB build must not use JSON_OBJECT in migrations');
 
-const serverBundle = await readFile(resolve(runtime,'packages/novera/index.js'),'utf8');
-if (/JSON_OBJECT\s*\(/i.test(serverBundle)) throw new Error('server runtime still depends on JSON_OBJECT');
+async function collectTs(dir) {
+  const out = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) out.push(...await collectTs(path));
+    else if (entry.isFile() && entry.name.endsWith('.ts')) out.push(path);
+  }
+  return out;
+}
+
+for (const sourceFile of await collectTs(resolve(root, 'apps/server/src'))) {
+  const source = await readFile(sourceFile, 'utf8');
+  if (/JSON_OBJECT\s*\(/i.test(source)) throw new Error(`server source still uses JSON_OBJECT: ${sourceFile}`);
+}
 
 console.log('NOVERA v0.14.2 Alpha GTA5HOST legacy-MariaDB runtime validation passed');
