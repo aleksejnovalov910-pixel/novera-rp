@@ -7,7 +7,7 @@
   const meta = document.querySelector('.server-meta');
   if (meta) {
     Array.from(meta.querySelectorAll('span')).forEach((el) => {
-      if ((el.textContent || '').includes('ALPHA')) el.textContent = 'ALPHA 0.15.3';
+      if ((el.textContent || '').includes('ALPHA')) el.textContent = 'ALPHA 0.15.4';
     });
   }
 
@@ -40,13 +40,19 @@
   const showCharacters = () => {
     $('authScene')?.classList.add('hidden');
     authCard.classList.add('hidden');
-    $('slots')?.classList.remove('hidden');
+    const slots = $('slots');
+    if (slots) slots.classList.remove('hidden');
     $('creator')?.classList.add('hidden');
     $('gameplay')?.classList.add('hidden');
-    $('brand')?.classList.remove('hidden');
+    $('brand')?.classList.add('hidden');
+    document.documentElement.classList.add('character-selection-active');
+    document.body.classList.add('character-selection-active');
+  };
+  const leaveCharacters = () => {
+    document.documentElement.classList.remove('character-selection-active');
+    document.body.classList.remove('character-selection-active');
   };
 
-  // Internal bridge acknowledgement is intentionally invisible to players.
   window.noveraAuthBridgeAck = () => {};
 
   const originalAuthResult = window.noveraAuthResult;
@@ -70,12 +76,11 @@
       try { originalAuthResult(raw); } catch {}
     }
 
-    // Some legacy RAGE:MP CEF builds occasionally fail to repaint the screen
-    // after the original handler toggles classes. Force the authenticated view.
     if (result.ok) {
       showCharacters();
-      window.setTimeout(showCharacters, 50);
-      window.setTimeout(showCharacters, 250);
+      window.setTimeout(showCharacters, 40);
+      window.setTimeout(showCharacters, 120);
+      window.setTimeout(showCharacters, 300);
     }
   };
 
@@ -83,8 +88,26 @@
   if (typeof originalCharacters === 'function') {
     window.noveraCharacters = (raw) => {
       showCharacters();
-      originalCharacters(raw);
+      try { originalCharacters(raw); } catch {}
+      showCharacters();
       window.setTimeout(showCharacters, 50);
+      window.setTimeout(showCharacters, 180);
+    };
+  }
+
+  const originalOpenCreator = window.noveraOpenCreator;
+  if (typeof originalOpenCreator === 'function') {
+    window.noveraOpenCreator = (slot) => {
+      leaveCharacters();
+      originalOpenCreator(slot);
+    };
+  }
+
+  const originalSelected = window.noveraCharacterSelected;
+  if (typeof originalSelected === 'function') {
+    window.noveraCharacterSelected = (...args) => {
+      leaveCharacters();
+      originalSelected(...args);
     };
   }
 
