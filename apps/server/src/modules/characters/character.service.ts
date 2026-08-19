@@ -83,7 +83,9 @@ export class CharacterService {
 
     const id = BigInt(result[0].insertId);
     const rows = await this.db.orm.select().from(characters).where(eq(characters.id, id)).limit(1);
-    return this.summary(rows[0]);
+    const created = rows[0];
+    if (!created) throw new Error(`Character ${id.toString()} was inserted but could not be reloaded`);
+    return this.summary(created);
   }
 
   async getOwned(accountId: bigint, characterId: bigint) {
