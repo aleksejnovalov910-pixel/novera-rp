@@ -1,16 +1,20 @@
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const runtime = resolve(root, 'runtime');
 const required = [
   'conf.json',
+  'novera.config.json',
+  'START_HERE.txt',
   'packages/novera/index.js',
+  'packages/novera/package.json',
   'client_packages/index.js',
   'client_packages/novera/client/index.js',
   'client_packages/novera/cef/index.html',
   'client_packages/novera/cef/app.js',
   'client_packages/novera/cef/device.js',
+  'migrations/ALL_MIGRATIONS.sql',
   'migrations/0001_accounts_characters.sql',
   'migrations/0002_character_creator.sql',
   'migrations/0003_gameplay_core.sql',
@@ -22,11 +26,25 @@ const required = [
   'migrations/0009_property_housing_2.sql',
   'migrations/0010_jobs_career_2.sql'
 ];
-
 for (const file of required) await access(resolve(runtime, file));
+
 const conf = JSON.parse(await readFile(resolve(runtime, 'conf.json'), 'utf8'));
 if (conf.name !== 'NOVERA RP') throw new Error('runtime conf.json has wrong server name');
 if (Number(conf.maxplayers) !== 500) throw new Error('runtime conf.json must use 500 slots');
-const deploy = await readFile(resolve(runtime,'DEPLOY.txt'),'utf8');
-if (!deploy.includes('v0.14.0 Alpha')) throw new Error('runtime must be marked as v0.14 Alpha');
-console.log('NOVERA runtime validation passed');
+if (Number(conf.port) !== 22620) throw new Error('runtime conf.json must target GTA5HOST port 22620');
+
+const config = JSON.parse(await readFile(resolve(runtime,'novera.config.json'),'utf8'));
+if (!String(config.DATABASE_URL ?? '').includes('CHANGE_ME')) throw new Error('distribution config must not contain real database credentials');
+if (Number(config.SERVER_PORT) !== 22620 || Number(config.SERVER_MAX_PLAYERS) !== 500) throw new Error('novera.config.json does not match hosting target');
+
+const pkg = JSON.parse(await readFile(resolve(runtime,'packages/novera/package.json'),'utf8'));
+if (pkg.version !== '0.14.1-alpha') throw new Error('runtime package version mismatch');
+const start = await readFile(resolve(runtime,'START_HERE.txt'),'utf8');
+if (!start.includes('v0.14.1 Alpha')) throw new Error('START_HERE version mismatch');
+
+const migrations = (await readdir(resolve(runtime,'migrations'))).filter((n)=>/^\d{4}_.+\.sql$/.test(n)).sort();
+if (migrations.length !== 10) throw new Error(`expected 10 migrations, got ${migrations.length}`);
+const combined = await readFile(resolve(runtime,'migrations/ALL_MIGRATIONS.sql'),'utf8');
+for (const migration of migrations) if (!combined.includes(`-- ${migration}`)) throw new Error(`combined migration missing ${migration}`);
+
+console.log('NOVERA v0.14.1 Alpha GTA5HOST runtime validation passed');
