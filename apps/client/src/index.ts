@@ -1,4 +1,4 @@
-import { AuthEvents, CharacterEvents, GameplayEvents, WorldEvents, type CharacterCreatorPreview, type CreateCharacterInput } from '@novera/shared';
+import { AuthEvents, CharacterEvents, GameplayEvents, WorldEvents, type CharacterCreatorPreview } from '@novera/shared';
 
 let uiBrowser: BrowserMp | null = null;
 let creatorCamera: CameraMp | null = null;
@@ -40,6 +40,10 @@ mp.events.add('novera:cef:character:delete',(id:string)=>mp.events.callRemote(Ch
 mp.events.add('novera:cef:device:close',closeDevice);
 mp.events.add('novera:cef:bank:deposit',(amount:number)=>mp.events.callRemote(GameplayEvents.bankDeposit,Number(amount)));
 mp.events.add('novera:cef:bank:withdraw',(amount:number)=>mp.events.callRemote(GameplayEvents.bankWithdraw,Number(amount)));
+mp.events.add('novera:cef:bank:transfer',(account:string,amount:number)=>mp.events.callRemote(GameplayEvents.bankTransfer,String(account),Number(amount)));
+mp.events.add('novera:cef:inventory:move',(from:number,to:number)=>mp.events.callRemote(GameplayEvents.inventoryMove,Number(from),Number(to)));
+mp.events.add('novera:cef:inventory:split',(from:number,to:number,amount:number)=>mp.events.callRemote(GameplayEvents.inventorySplit,Number(from),Number(to),Number(amount)));
+mp.events.add('novera:cef:inventory:use',(slot:number)=>mp.events.callRemote(GameplayEvents.inventoryUse,Number(slot)));
 mp.events.add('novera:cef:vehicle:spawn',(id:string)=>mp.events.callRemote(WorldEvents.vehicleSpawn,id));
 
 mp.keys.bind(0x26,true,()=>{if(!deviceOpen)openDevice('phone');else closeDevice()});

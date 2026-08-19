@@ -4,7 +4,7 @@
   const status = $('status'), slotGrid = $('slotGrid'), stage = $('creatorStage');
   const overlay = $('overlay'), deviceTitle = $('deviceTitle'), deviceEyebrow = $('deviceEyebrow'), deviceHome = $('deviceHome'), deviceContent = $('deviceContent');
   let authMode = 'login', creatorSlot = 1, gender = 'male', dragging = false, lastX = 0;
-  let game = { money: { cash: 0, bank: 0 }, inventory: [], vehicles: [], properties: [] };
+  let game = { money: { cash: 0, bank: 0, bankAccount: '' }, inventory: [], vehicles: [], properties: [] };
   let world = { jobs: [], family: null, faction: null };
 
   const trigger = (name, ...args) => { if (window.mp && typeof window.mp.trigger === 'function') window.mp.trigger(name, ...args); };
@@ -32,10 +32,17 @@
     if(name==='settings'){ deviceEyebrow.textContent='NOVERA'; deviceTitle.textContent='Настройки'; deviceContent.innerHTML='<div class="content-card"><h3>Управление</h3><p>F2 — настройки · ↑ — телефон · ↓ — планшет · I — инвентарь</p><p>Перебинды, звук, HUD и графические параметры будут расширяться модулем настроек.</p></div>'; }
     bindApps();
   }
-  function renderInventory(){ deviceHome.innerHTML=''; const items=game.inventory||[]; deviceContent.innerHTML=`<div class="inventory-grid">${Array.from({length:30},(_,slot)=>{const i=items.find(x=>+x.slot===slot);return `<div class="inv-slot" data-slot="${slot}">${i?`<b>${i.itemKey}</b><span>x${i.amount}</span>`:`<span>${slot+1}</span>`}</div>`}).join('')}</div>`; }
+  function renderInventory(){
+    deviceHome.innerHTML=''; const items=game.inventory||[];
+    deviceContent.innerHTML=`<div class="content-card"><p>Двойной клик — использовать предмет. ПКМ по стакуемому предмету — разделить стак.</p></div><div class="inventory-grid">${Array.from({length:30},(_,slot)=>{const i=items.find(x=>+x.slot===slot);return `<div class="inv-slot" data-slot="${slot}" data-item="${i?i.id:''}">${i?`<b>${i.itemKey}</b><span>x${i.amount}</span>`:`<span>${slot+1}</span>`}</div>`}).join('')}</div>`;
+    deviceContent.querySelectorAll('.inv-slot[data-item]:not([data-item=""])').forEach((el)=>{
+      el.ondblclick=()=>trigger('novera:cef:inventory:use',+el.dataset.slot);
+      el.oncontextmenu=(e)=>{e.preventDefault();const item=items.find(x=>String(x.id)===String(el.dataset.item));if(!item||+item.amount<2)return;const amount=Number(prompt(`Сколько отделить? Доступно: ${item.amount}`,Math.floor(+item.amount/2)));if(!Number.isInteger(amount)||amount<=0||amount>=+item.amount)return;const free=Array.from({length:30},(_,s)=>s).find(s=>!items.some(x=>+x.slot===s));if(free===undefined)return toast('Нет свободного слота');trigger('novera:cef:inventory:split',+el.dataset.slot,free,amount)};
+    });
+  }
   function renderApp(app){
     deviceHome.innerHTML='';
-    if(app==='bank') deviceContent.innerHTML=`<div class="content-card"><h3>Счета</h3><div class="big-number">${money(game.money.bank)}</div><p>Наличные: ${money(game.money.cash)}</p><div class="row"><button data-bank="deposit">Внести $1000</button><button data-bank="withdraw">Снять $1000</button></div></div>`;
+    if(app==='bank') deviceContent.innerHTML=`<div class="content-card"><h3>Счёт NOVERA Bank</h3><div class="big-number">${money(game.money.bank)}</div><p>Наличные: ${money(game.money.cash)}</p><p>Номер счёта: <b>${game.money.bankAccount||'создаётся...'}</b></p><div class="row"><button data-bank="deposit">Внести $1000</button><button data-bank="withdraw">Снять $1000</button></div><h3>Перевод</h3><div class="grid2"><input id="bankTarget" placeholder="NR0000000001" maxlength="12"><input id="bankAmount" type="number" min="1" step="1" placeholder="Сумма"></div><button id="bankTransfer" class="primary">Перевести</button></div>`;
     else if(app==='vehicles') deviceContent.innerHTML=(game.vehicles.length?game.vehicles.map(v=>`<div class="list-row"><div><b>${v.model}</b><span>${v.plate} · ${Math.round(v.fuel)}% топлива</span></div><button data-spawn="${v.id}">${v.stored?'Вызвать':'В мире'}</button></div>`).join(''):'<div class="empty-state">У тебя пока нет транспорта</div>');
     else if(app==='properties') deviceContent.innerHTML=(game.properties.length?game.properties.map(p=>`<div class="list-row"><div><b>${p.name}</b><span>${p.type}</span></div></div>`).join(''):'<div class="empty-state">Недвижимость ещё не приобретена</div>');
     else if(app==='jobs') deviceContent.innerHTML=`<div class="content-card"><h3>Карьера</h3><p>Такси · Курьер · Дальнобойщик · Механик · Эвакуатор · Строитель · Электрик · Мусоровоз</p></div>`;
@@ -44,6 +51,7 @@
     else if(app==='market') deviceContent.innerHTML='<div class="content-card"><h3>V-Market</h3><p>Единая площадка транспорта, недвижимости, предметов и услуг. Сделки выполняются сервером транзакционно.</p></div>';
     else deviceContent.innerHTML='<div class="empty-state">Модуль подключён к оболочке и будет наполнен игровыми сценариями.</div>';
     deviceContent.querySelectorAll('[data-bank]').forEach(b=>b.onclick=()=>trigger(`novera:cef:bank:${b.dataset.bank}`,1000));
+    if($('bankTransfer')) $('bankTransfer').onclick=()=>{const account=$('bankTarget').value.trim().toUpperCase(),amount=Number($('bankAmount').value);if(!/^NR\d{10}$/.test(account)||!Number.isSafeInteger(amount)||amount<=0)return toast('Проверь номер счёта и сумму');trigger('novera:cef:bank:transfer',account,amount)};
     deviceContent.querySelectorAll('[data-spawn]').forEach(b=>b.onclick=()=>trigger('novera:cef:vehicle:spawn',b.dataset.spawn));
   }
   function bindApps(){ deviceHome.querySelectorAll('[data-app]').forEach((b)=>b.onclick=()=>renderApp(b.dataset.app)); }
@@ -54,7 +62,7 @@
   window.noveraOpenCreator=(slot)=>{creatorSlot=+slot;$('creatorSlotLabel').textContent=`Слот ${creatorSlot}`;show('creator');setTimeout(preview,150)};
   window.noveraCharacterResult=(raw)=>toast(JSON.parse(raw).message);
   window.noveraCharacterSelected=()=>{show('gameplay');overlay.classList.add('hidden')};
-  window.noveraGameplayState=(raw)=>{const r=JSON.parse(raw);if(!r.ok){toast(r.message||'Ошибка');return}if(r.payload){game=r.payload;refreshHud()}else if(r.message)toast(r.message)};
+  window.noveraGameplayState=(raw)=>{const r=JSON.parse(raw);if(!r.ok){toast(r.message||'Ошибка');return}if(r.payload&&r.payload.money){game=r.payload;refreshHud()}else if(r.message)toast(r.message);if(!overlay.classList.contains('hidden')&&deviceTitle.textContent==='Инвентарь'&&r.ok)trigger('novera:cef:device:close')};
   window.noveraWorldState=(raw)=>{const r=JSON.parse(raw);if(r.ok)world={jobs:r.jobs||[],family:r.family||null,faction:r.faction||null}};
   window.noveraOpenDevice=(name)=>openDevice(name);
 })();

@@ -2,10 +2,12 @@ export const GameplayEvents = {
   bootstrap: 'novera:gameplay:bootstrap',
   state: 'novera:gameplay:state',
   inventoryMove: 'novera:inventory:move',
+  inventorySplit: 'novera:inventory:split',
   inventoryUse: 'novera:inventory:use',
   walletTransfer: 'novera:economy:transfer',
   bankDeposit: 'novera:bank:deposit',
   bankWithdraw: 'novera:bank:withdraw',
+  bankTransfer: 'novera:bank:transfer',
   vehicleSpawn: 'novera:vehicle:spawn',
   vehicleStore: 'novera:vehicle:store',
   propertyEnter: 'novera:property:enter',
@@ -20,6 +22,7 @@ export const GameplayEvents = {
 export interface MoneyState {
   cash: number;
   bank: number;
+  bankAccount?: string;
 }
 
 export interface InventoryItemView {
@@ -53,6 +56,13 @@ export interface GameplayBootstrap {
   inventory: InventoryItemView[];
   vehicles: VehicleView[];
   properties: PropertyView[];
+}
+
+export interface InventoryUseResult {
+  itemKey: string;
+  consumed: boolean;
+  remaining: number;
+  effect: 'phone' | 'identity' | 'hydrate' | 'feed' | 'heal_minor' | 'repair_vehicle' | 'none';
 }
 
 export interface GameplayResult {
