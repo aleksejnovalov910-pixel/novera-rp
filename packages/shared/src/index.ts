@@ -8,3 +8,4 @@ export * from './events/gameplay';
 export * from './events/world';
 export * from './events/extended';
 export * from './events/roleplay';
+export * from './catalog/items';

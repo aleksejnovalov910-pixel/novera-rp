@@ -3,6 +3,7 @@ import { createDatabase } from '@novera/database';
 import { Logger } from '@novera/logging';
 import { AccountService } from './modules/accounts/account.service';
 import { CharacterService } from './modules/characters/character.service';
+import { OnboardingService } from './modules/onboarding/onboarding.service';
 import { GameplayService } from './modules/gameplay/gameplay.service';
 import { JobService } from './modules/jobs/job.service';
 import { VehicleService } from './modules/vehicles/vehicle.service';
@@ -28,9 +29,9 @@ import { EventGuard } from './services/event-guard';
 
 async function boot(): Promise<void> {
   const started=Date.now(),config=loadConfig(),logger=new Logger('server',config.logLevel),db=createDatabase(config.databaseUrl),rateLimits=await createRateLimitStore(config.redisUrl),health=await db.healthcheck();
-  const accounts=new AccountService(db),characters=new CharacterService(db),gameplay=new GameplayService(db),jobs=new JobService(db),vehicles=new VehicleService(db),properties=new PropertyService(db),social=new SocialService(db),market=new MarketService(db),phone=new PhoneService(db),business=new BusinessService(db),government=new GovernmentService(db),admin=new AdminService(db),organizations=new OrganizationService(db),police=new PoliceService(db),medical=new MedicalService(db),progression=new ProgressionService(db),guard=new EventGuard();
+  const accounts=new AccountService(db),characters=new CharacterService(db),onboarding=new OnboardingService(db),gameplay=new GameplayService(db),jobs=new JobService(db),vehicles=new VehicleService(db),properties=new PropertyService(db),social=new SocialService(db),market=new MarketService(db),phone=new PhoneService(db),business=new BusinessService(db),government=new GovernmentService(db),admin=new AdminService(db),organizations=new OrganizationService(db),police=new PoliceService(db),medical=new MedicalService(db),progression=new ProgressionService(db),guard=new EventGuard();
   registerAuthEvents({accounts,characters,rateLimits,logger:logger.child('auth'),maxAttempts:config.authMaxAttempts,lockSeconds:config.authLockSeconds});
-  registerCharacterEvents({characters,logger:logger.child('characters')});
+  registerCharacterEvents({characters,onboarding,logger:logger.child('characters')});
   registerGameplayEvents({gameplay,logger:logger.child('gameplay')});
   registerWorldEvents({jobs,vehicles,properties,social,market,logger:logger.child('world')});
   registerExtendedEvents({phone,business,government,admin,guard,logger:logger.child('extended')});

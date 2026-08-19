@@ -1,35 +1,11 @@
 # NOVERA RP
 
-NOVERA RP is a from-scratch GTA V Role Play project for RAGE:MP, designed around server-authoritative systems, a modular TypeScript codebase, MySQL persistence and a unified CEF interface.
+From-scratch GTA V Role Play server for RAGE:MP with a server-authoritative TypeScript architecture, MySQL persistence and unified CEF interface.
 
-## Current milestone
+## v0.9.0 — pre-host closed-alpha foundation
 
-**v0.8.0 — Closed-alpha platform foundation**
+The source currently contains account/auth security, three character slots, GTA freemode creator, first-spawn onboarding, HUD/devices, cash/bank, inventory, vehicles, properties, jobs, factions, families, businesses, V-Market, phone persistence, government fines/licenses, Police wanted/cases/evidence, EMS injuries/medical records, progression, reports/admin foundations and anti-abuse event guards.
 
-Implemented/integrated in source:
+A GTA5HOST-oriented release pipeline bundles the server/client code and uploads an FTP-ready runtime artifact from GitHub Actions. The target remains RAGE:MP 1.1 old with 500 slots.
 
-- account registration/login with built-in `crypto.scrypt` password hashing;
-- three character slots and GTA freemode character creator;
-- persistent character position and gameplay bootstrap;
-- cash/bank transactions and audit-friendly money history;
-- inventory persistence and transactional slot moves;
-- owned vehicles, VIN/plates, spawn/storage foundation;
-- properties, ownership, purchase and private dimensions;
-- eight career foundations with progression/rewards;
-- factions, families and business ownership/employees;
-- V-Market transaction foundation with fees;
-- phone contacts/messages persistence;
-- licenses, fines and government data;
-- police wanted records, cases and evidence;
-- EMS medical records/injuries/treatment foundation;
-- quests and achievements persistence;
-- reports/punishments and admin-level account support;
-- event rate guards and server-side permission checks;
-- HUD plus phone/tablet/inventory/settings CEF shell;
-- GTA5HOST-oriented bundled runtime builder for RAGE:MP 1.1 old / 500 slots.
-
-## Important status
-
-This is **IMPLEMENTED + INTEGRATED SOURCE**, not yet `TESTED` or `PRODUCTION READY`. Per the project plan, the host is intentionally untouched until the feature/content pass and local build validation are complete. The first host upload will be a single assembled runtime, after which real RAGE:MP compatibility errors will be fixed against console logs.
-
-See `docs/` for architecture, character creator, gameplay platform, extended systems, roleplay systems and deployment notes.
+**The host is intentionally untouched.** Source status is IMPLEMENTED/INTEGRATED, not TESTED/PRODUCTION READY. We continue feature/content and CI correction before the first upload; after that, host-console errors become the source of truth for compatibility fixes.

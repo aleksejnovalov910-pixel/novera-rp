@@ -1,34 +1,26 @@
 name: NOVERA CI
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: node scripts/build-runtime.mjs
+      - run: node scripts/validate-runtime.mjs
+      - uses: actions/upload-artifact@v4
         with:
-          version: 10.15.0
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      - name: Typecheck
-        run: pnpm typecheck
-      - name: Build GTA5HOST runtime
-        run: node scripts/build-runtime.mjs
-      - name: Validate runtime layout
-        run: node scripts/validate-runtime.mjs
+          name: novera-gta5host-runtime
+          path: runtime/
+          if-no-files-found: error
