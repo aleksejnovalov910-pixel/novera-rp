@@ -1,6 +1,6 @@
 {
   "name": "@novera/server",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "private": true,
   "main": "dist/index.js",
   "scripts": {
@@ -13,7 +13,6 @@
     "@novera/database": "workspace:*",
     "@novera/logging": "workspace:*",
     "@novera/shared": "workspace:*",
-    "argon2": "^0.45.1",
     "redis": "^6.1.0"
   },
   "devDependencies": {
