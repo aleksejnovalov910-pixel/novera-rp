@@ -44,7 +44,7 @@ export class JobService {
       await connection.execute('UPDATE jobs_progress SET level=?,experience=?,completed_tasks=completed_tasks+1,total_earnings=total_earnings+?,streak=?,reputation=reputation+1,last_completed_at=CURRENT_TIMESTAMP WHERE character_id=? AND job_key=?',[nextLevel,totalXp,pay,streak,characterId,jobKey]);
       await connection.execute('INSERT IGNORE INTO character_wallets (character_id) VALUES (?)',[characterId]);
       await connection.execute('UPDATE character_wallets SET bank=bank+? WHERE character_id=?',[pay,characterId]);
-      await connection.execute('INSERT INTO money_transactions (character_id,type,amount,metadata) VALUES (?,?,?,JSON_OBJECT(\'job\',?,\'task\',?))',[characterId,'job_reward',pay,jobKey,session.task_key]);
+      await connection.execute('INSERT INTO money_transactions (character_id,type,amount,metadata) VALUES (?,?,?,?)',[characterId,'job_reward',pay,JSON.stringify({job:jobKey,task:String(session.task_key)})]);
       await connection.execute('INSERT INTO job_completion_log (character_id,job_key,task_key,pay,experience,duration_seconds) VALUES (?,?,?,?,?,?)',[characterId,jobKey,session.task_key,pay,xp,Number(session.duration_seconds)]);
       await connection.execute("UPDATE job_sessions SET state='completed',completed_at=CURRENT_TIMESTAMP WHERE id=?",[session.id]);
       await connection.commit(); return {pay,level:nextLevel,experience:totalXp,taskKey:String(session.task_key)};
