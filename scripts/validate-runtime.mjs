@@ -19,9 +19,9 @@ if (!String(config.DATABASE_URL ?? '').includes('CHANGE_ME')) throw new Error('d
 if (Number(config.SERVER_PORT) !== 22620 || Number(config.SERVER_MAX_PLAYERS) !== 500) throw new Error('novera.config.json does not match hosting target');
 
 const pkg = JSON.parse(await readFile(resolve(runtime,'packages/novera/package.json'),'utf8'));
-if (pkg.version !== '0.15.2-alpha') throw new Error('runtime package version mismatch');
+if (pkg.version !== '0.15.3-alpha') throw new Error('runtime package version mismatch');
 const start = await readFile(resolve(runtime,'START_HERE.txt'),'utf8');
-if (!start.includes('v0.15.2 Alpha')) throw new Error('START_HERE version mismatch');
+if (!start.includes('v0.15.3 Alpha')) throw new Error('START_HERE version mismatch');
 const authHtml = await readFile(resolve(runtime,'client_packages/novera/cef/index.html'),'utf8');
 if (!authHtml.includes('auth-hotfix.css') || !authHtml.includes('auth-hotfix.js')) throw new Error('auth hotfix assets are not loaded');
 const authHotfix = await readFile(resolve(runtime,'client_packages/novera/cef/auth-hotfix.js'),'utf8');
@@ -55,4 +55,4 @@ for (const sourceFile of await collectTs(resolve(root, 'apps/server/src'))) {
   if (/JSON_OBJECT\s*\(/i.test(source)) throw new Error(`server source still uses JSON_OBJECT: ${sourceFile}`);
 }
 
-console.log('NOVERA v0.15.2 Alpha GTA5HOST legacy-Node/auth UI validation passed');
+console.log('NOVERA v0.15.3 Alpha GTA5HOST legacy-Node/auth UI validation passed');
