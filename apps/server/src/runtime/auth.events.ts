@@ -1,13 +1,13 @@
-import type { RedisClientType } from 'redis';
 import { AuthEvents, type AuthCredentials, type AuthResult } from '@novera/shared';
 import type { Logger } from '@novera/logging';
 import type { AccountService } from '../modules/accounts/account.service';
 import type { CharacterService } from '../modules/characters/character.service';
+import type { RateLimitStore } from '../services/rate-limit';
 
 interface AuthDependencies {
   accounts: AccountService;
   characters: CharacterService;
-  redis: RedisClientType;
+  rateLimits: RateLimitStore;
   logger: Logger;
   maxAttempts: number;
   lockSeconds: number;
@@ -27,7 +27,7 @@ export function registerAuthEvents(deps: AuthDependencies): void {
       const created = await deps.accounts.register(input.login, input.password);
       if (!created) return send(player, { ok: false, code: 'ACCOUNT_EXISTS', message: 'Такой аккаунт уже существует.' });
       player.setVariable('accountId', created.id.toString());
-      await deps.redis.del(key(player));
+      await deps.rateLimits.reset(key(player));
       send(player, { ok: true, code: 'OK', message: 'Аккаунт создан.' });
       player.call(AuthEvents.characters, [JSON.stringify([])]);
       deps.logger.info('account registered', { accountId: created.id.toString(), player: player.name });
@@ -40,17 +40,16 @@ export function registerAuthEvents(deps: AuthDependencies): void {
   mp.events.add(AuthEvents.login, async (player: PlayerMp, raw: string) => {
     const rateKey = key(player);
     try {
-      const attempts = Number(await deps.redis.get(rateKey) ?? '0');
+      const attempts = await deps.rateLimits.get(rateKey);
       if (attempts >= deps.maxAttempts) return send(player, { ok: false, code: 'RATE_LIMITED', message: 'Слишком много попыток. Попробуй позже.' });
       const input = JSON.parse(raw) as AuthCredentials;
       if (!deps.accounts.validate(input.login, input.password)) return send(player, { ok: false, code: 'INVALID_INPUT', message: 'Проверь логин и пароль.' });
       const account = await deps.accounts.authenticate(input.login, input.password);
       if (!account) {
-        const next = await deps.redis.incr(rateKey);
-        if (next === 1) await deps.redis.expire(rateKey, deps.lockSeconds);
+        await deps.rateLimits.increment(rateKey, deps.lockSeconds);
         return send(player, { ok: false, code: 'INVALID_CREDENTIALS', message: 'Неверный логин или пароль.' });
       }
-      await deps.redis.del(rateKey);
+      await deps.rateLimits.reset(rateKey);
       player.setVariable('accountId', account.id.toString());
       send(player, { ok: true, code: 'OK', message: 'Авторизация успешна.' });
       const list = await deps.characters.list(account.id);
