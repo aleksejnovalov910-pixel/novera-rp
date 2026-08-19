@@ -11,6 +11,13 @@
     "sourceMap": true,
     "declaration": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "baseUrl": ".",
+    "paths": {
+      "@novera/shared": ["packages/shared/src/index.ts"],
+      "@novera/config": ["packages/config/src/index.ts"],
+      "@novera/database": ["packages/database/src/index.ts"],
+      "@novera/logging": ["packages/logging/src/index.ts"]
+    }
   }
 }
