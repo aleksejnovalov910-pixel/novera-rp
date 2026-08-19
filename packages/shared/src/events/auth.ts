@@ -16,11 +16,3 @@ export interface AuthResult {
   code: 'OK' | 'INVALID_INPUT' | 'INVALID_CREDENTIALS' | 'ACCOUNT_EXISTS' | 'RATE_LIMITED' | 'INTERNAL_ERROR';
   message: string;
 }
-
-export interface CharacterSummary {
-  id: string;
-  firstName: string;
-  lastName: string;
-  level: number;
-  lastPlayedAt: string | null;
-}
