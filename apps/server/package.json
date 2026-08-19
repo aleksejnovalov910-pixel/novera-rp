@@ -1,6 +1,6 @@
 {
   "name": "@novera/server",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "main": "dist/index.js",
   "scripts": {
@@ -12,8 +12,7 @@
     "@novera/config": "workspace:*",
     "@novera/database": "workspace:*",
     "@novera/logging": "workspace:*",
-    "@novera/shared": "workspace:*",
-    "redis": "^6.1.0"
+    "@novera/shared": "workspace:*"
   },
   "devDependencies": {
     "@ragempcommunity/types-server": "^2.1.9",

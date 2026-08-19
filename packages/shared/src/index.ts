@@ -11,3 +11,4 @@ export interface PlayerIdentity {
 export * from './events/auth';
 export * from './events/characters';
 export * from './events/gameplay';
+export * from './events/world';
