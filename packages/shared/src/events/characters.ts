@@ -4,6 +4,8 @@ export const CharacterEvents = {
   delete: 'novera:characters:delete',
   select: 'novera:characters:select',
   creatorOpen: 'novera:characters:creator:open',
+  creatorPreview: 'novera:characters:creator:preview',
+  creatorClose: 'novera:characters:creator:close',
   result: 'novera:characters:result',
   selected: 'novera:characters:selected'
 } as const;
@@ -29,6 +31,11 @@ export interface CreateCharacterInput {
   firstName: string;
   lastName: string;
   birthDate: string;
+  gender: Gender;
+  appearance: CharacterAppearance;
+}
+
+export interface CharacterCreatorPreview {
   gender: Gender;
   appearance: CharacterAppearance;
 }
