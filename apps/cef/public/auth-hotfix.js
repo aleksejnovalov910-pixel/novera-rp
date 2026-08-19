@@ -18,10 +18,13 @@
 
   let pending = false;
   let timeout = 0;
+  let authGranted = false;
+
   const setMessage = (text, type = '') => {
     message.textContent = text || '';
     message.className = `auth-debug ${type}`.trim();
   };
+
   const finishPending = () => {
     pending = false;
     window.clearTimeout(timeout);
@@ -29,6 +32,7 @@
     submit.disabled = false;
     submit.textContent = $('tabRegister')?.classList.contains('active') ? 'Начать историю' : 'Войти в NOVERA';
   };
+
   const showNotice = (text) => {
     const status = $('status');
     if (!status || !text) return;
@@ -37,7 +41,23 @@
     window.clearTimeout(showNotice.timer);
     showNotice.timer = window.setTimeout(() => status.classList.remove('show'), 3200);
   };
+
+  const showAuth = () => {
+    $('authScene')?.classList.remove('hidden');
+    authCard.classList.remove('hidden');
+    $('slots')?.classList.add('hidden');
+    $('creator')?.classList.add('hidden');
+    $('gameplay')?.classList.add('hidden');
+    $('brand')?.classList.add('hidden');
+    document.documentElement.classList.remove('character-selection-active');
+    document.body.classList.remove('character-selection-active');
+  };
+
   const showCharacters = () => {
+    if (!authGranted) {
+      showAuth();
+      return false;
+    }
     $('authScene')?.classList.add('hidden');
     authCard.classList.add('hidden');
     const slots = $('slots');
@@ -47,11 +67,17 @@
     $('brand')?.classList.add('hidden');
     document.documentElement.classList.add('character-selection-active');
     document.body.classList.add('character-selection-active');
+    return true;
   };
+
   const leaveCharacters = () => {
     document.documentElement.classList.remove('character-selection-active');
     document.body.classList.remove('character-selection-active');
   };
+
+  // Always start in AUTH LOCK. A character list is ignored until the server
+  // has explicitly returned a successful auth result in this browser session.
+  showAuth();
 
   window.noveraAuthBridgeAck = () => {};
 
@@ -62,12 +88,17 @@
     try {
       result = JSON.parse(raw);
       if (result.ok) {
+        authGranted = true;
         setMessage('');
         showNotice(result.message || 'Готово.');
       } else {
+        authGranted = false;
+        showAuth();
         setMessage(result.message || 'Не удалось выполнить запрос.', 'error');
       }
     } catch {
+      authGranted = false;
+      showAuth();
       setMessage('Не удалось обработать ответ сервера. Повтори попытку.', 'error');
       return;
     }
@@ -76,28 +107,31 @@
       try { originalAuthResult(raw); } catch {}
     }
 
-    if (result.ok) {
-      showCharacters();
-      window.setTimeout(showCharacters, 40);
-      window.setTimeout(showCharacters, 120);
-      window.setTimeout(showCharacters, 300);
-    }
+    // Do NOT open character selection here. Wait for AuthEvents.characters.
+    if (!result.ok) showAuth();
   };
 
   const originalCharacters = window.noveraCharacters;
-  if (typeof originalCharacters === 'function') {
-    window.noveraCharacters = (raw) => {
-      showCharacters();
+  window.noveraCharacters = (raw) => {
+    if (!authGranted) {
+      showAuth();
+      return;
+    }
+    if (typeof originalCharacters === 'function') {
       try { originalCharacters(raw); } catch {}
-      showCharacters();
-      window.setTimeout(showCharacters, 50);
-      window.setTimeout(showCharacters, 180);
-    };
-  }
+    }
+    showCharacters();
+    window.setTimeout(showCharacters, 50);
+    window.setTimeout(showCharacters, 180);
+  };
 
   const originalOpenCreator = window.noveraOpenCreator;
   if (typeof originalOpenCreator === 'function') {
     window.noveraOpenCreator = (slot) => {
+      if (!authGranted) {
+        showAuth();
+        return;
+      }
       leaveCharacters();
       originalOpenCreator(slot);
     };
@@ -106,6 +140,10 @@
   const originalSelected = window.noveraCharacterSelected;
   if (typeof originalSelected === 'function') {
     window.noveraCharacterSelected = (...args) => {
+      if (!authGranted) {
+        showAuth();
+        return;
+      }
       leaveCharacters();
       originalSelected(...args);
     };
@@ -131,6 +169,8 @@
       return;
     }
 
+    authGranted = false;
+    showAuth();
     pending = true;
     authCard.classList.add('auth-busy');
     submit.disabled = true;
@@ -149,11 +189,14 @@
     timeout = window.setTimeout(() => {
       if (!pending) return;
       finishPending();
+      authGranted = false;
+      showAuth();
       setMessage('Сервер временно не отвечает. Повтори попытку.', 'error');
     }, 10000);
   };
 
   window.setTimeout(() => {
+    showAuth();
     try { window.mp?.trigger?.('novera:cef:ready'); } catch {}
   }, 50);
 })();
