@@ -1,4 +1,4 @@
-/* NOVERA v0.15.2 GTA5HOST CEF rendering hotfix */
+/* NOVERA v0.15.3 GTA5HOST CEF rendering hotfix */
 html,body,.shell{background:transparent!important}
 .auth-scene{background:transparent!important;pointer-events:auto;isolation:isolate}
 .auth-scene::before{background:linear-gradient(90deg,rgba(4,7,13,.74) 0%,rgba(4,7,13,.42) 34%,rgba(4,7,13,.10) 60%,rgba(4,7,13,.03) 100%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.20))!important}
@@ -7,8 +7,8 @@ html,body,.shell{background:transparent!important}
 .auth-card,.server-meta{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .auth-card{background:rgba(10,15,24,.94)!important;box-shadow:0 24px 70px rgba(0,0,0,.34)!important}
 .auth-card::after{display:none!important}
-/* Server status must be text/chips only, never a second black panel. */
-.server-meta{background:transparent!important;border:0!important;border-radius:0!important;padding:6px 0!important;box-shadow:none!important}
+/* Keep the original thin server-meta outline, but never restore the opaque black panel. */
+.server-meta{background:transparent!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:12px!important;padding:6px 10px!important;box-shadow:none!important}
 .auth-card.auth-busy{pointer-events:none;opacity:.86}
 .auth-primary[disabled]{cursor:wait;transform:none!important;opacity:.78}
 /* Only player-facing validation/server errors are shown here. No CEF/debug wording. */
