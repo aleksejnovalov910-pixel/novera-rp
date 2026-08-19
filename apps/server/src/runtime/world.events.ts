@@ -17,20 +17,28 @@ export function registerWorldEvents(deps: Deps): void {
     catch (error) { deps.logger.error('world request failed', { error: String(error) }); result(player, { ok: false, code: 'INTERNAL_ERROR' }); }
   });
 
+  mp.events.add(WorldEvents.jobStart, async (player: PlayerMp, jobKeyRaw: string) => {
+    const id = cid(player); if (!id) return result(player, { ok: false, code: 'NO_CHARACTER' });
+    const jobKey = String(jobKeyRaw); if (!deps.jobs.isJobKey(jobKey)) return result(player, { ok: false, code: 'INVALID_JOB' });
+    const token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${player.id}-${Math.random().toString(36).slice(2)}`;
+    const taskKey = deps.jobs.taskFor(jobKey, Date.now() + player.id);
+    try {
+      const ok = await deps.jobs.startSession(id, jobKey, token, taskKey); if (!ok) return result(player, { ok:false, code:'JOB_ALREADY_ACTIVE' });
+      player.setVariable('activeJobKey', jobKey); player.setVariable('activeJobToken', token); player.setVariable('activeJobTask', taskKey);
+      result(player, { ok:true, code:'OK', jobKey, taskKey, token });
+    } catch(error) { deps.logger.error('job start failed',{characterId:id.toString(),jobKey,error:String(error)}); result(player,{ok:false,code:'INTERNAL_ERROR'}); }
+  });
+
   mp.events.add(WorldEvents.jobFinish, async (player: PlayerMp, jobKeyRaw: string, tokenRaw: string) => {
     const id = cid(player); if (!id) return result(player, { ok: false, code: 'NO_CHARACTER' });
     const jobKey = String(jobKeyRaw); if (!deps.jobs.isJobKey(jobKey)) return result(player, { ok: false, code: 'INVALID_JOB' });
     const token = String(tokenRaw); const expected = String(player.getVariable('activeJobToken') ?? '');
     if (!expected || token !== expected || String(player.getVariable('activeJobKey') ?? '') !== jobKey) return result(player, { ok: false, code: 'INVALID_JOB_SESSION' });
-    try { const reward = await deps.jobs.reward(id, jobKey, 750, 125); player.setVariable('activeJobToken', null); player.setVariable('activeJobKey', null); result(player, { ok: true, code: 'OK', reward }); }
-    catch (error) { deps.logger.error('job reward failed', { characterId: id.toString(), jobKey, error: String(error) }); result(player, { ok: false, code: 'INTERNAL_ERROR' }); }
-  });
-
-  mp.events.add(WorldEvents.jobStart, (player: PlayerMp, jobKeyRaw: string) => {
-    const id = cid(player); if (!id) return result(player, { ok: false, code: 'NO_CHARACTER' });
-    const jobKey = String(jobKeyRaw); if (!deps.jobs.isJobKey(jobKey)) return result(player, { ok: false, code: 'INVALID_JOB' });
-    const token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${player.id}`;
-    player.setVariable('activeJobKey', jobKey); player.setVariable('activeJobToken', token); result(player, { ok: true, code: 'OK', jobKey, token });
+    try {
+      const reward = await deps.jobs.completeSession(id, jobKey, token); if(!reward) return result(player,{ok:false,code:'JOB_NOT_COMPLETABLE'});
+      player.setVariable('activeJobToken', null); player.setVariable('activeJobKey', null); player.setVariable('activeJobTask', null);
+      result(player, { ok: true, code: 'OK', reward });
+    } catch (error) { deps.logger.error('job reward failed', { characterId: id.toString(), jobKey, error: String(error) }); result(player, { ok: false, code: 'INTERNAL_ERROR' }); }
   });
 
   mp.events.add(WorldEvents.vehicleSpawn, async (player: PlayerMp, vehicleIdRaw: string) => {
