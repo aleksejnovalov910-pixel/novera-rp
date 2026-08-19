@@ -106,7 +106,7 @@ export class VehicleService {
     await connection.execute('INSERT IGNORE INTO character_wallets (character_id) VALUES (?)', [characterId]);
     const [result] = await connection.execute('UPDATE character_wallets SET bank = bank - ? WHERE character_id = ? AND bank >= ?', [amount, characterId, amount]);
     if (result.affectedRows !== 1) return false;
-    await connection.execute('INSERT INTO money_transactions (character_id, type, amount, metadata) VALUES (?, ?, ?, JSON_OBJECT(\'vehicleId\', ?))', [characterId, type, -amount, vehicleId.toString()]);
+    await connection.execute('INSERT INTO money_transactions (character_id, type, amount, metadata) VALUES (?, ?, ?, ?)', [characterId, type, -amount, JSON.stringify({ vehicleId: vehicleId.toString() })]);
     return true;
   }
 
@@ -133,7 +133,7 @@ export class VehicleService {
       const [rows] = await connection.query<any[]>('SELECT id FROM owned_vehicles WHERE id = ? AND character_id = ? FOR UPDATE', [vehicleId, characterId]);
       if (!rows[0] || !(await this.charge(connection, characterId, price, 'vehicle_insurance', vehicleId))) { await connection.rollback(); return false; }
       await connection.execute('UPDATE owned_vehicles SET insurance_status = ?, insurance_expires_at = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY) WHERE id = ?', [plan, vehicleId]);
-      await connection.execute("INSERT INTO vehicle_service_history (vehicle_id, character_id, service_type, cost, details) VALUES (?, ?, 'insurance', ?, JSON_OBJECT('plan', ?))", [vehicleId, characterId, price, plan]);
+      await connection.execute("INSERT INTO vehicle_service_history (vehicle_id, character_id, service_type, cost, details) VALUES (?, ?, 'insurance', ?, ?)", [vehicleId, characterId, price, JSON.stringify({ plan })]);
       await connection.commit(); return true;
     } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
   }
