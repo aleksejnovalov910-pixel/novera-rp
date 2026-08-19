@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS money_transactions (
   type VARCHAR(48) NOT NULL,
   amount BIGINT NOT NULL,
   balance_after BIGINT NULL,
-  metadata JSON NULL,
+  metadata LONGTEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX money_tx_character_idx (character_id, created_at),
   CONSTRAINT money_tx_character_fk FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
   amount INT UNSIGNED NOT NULL DEFAULT 1,
   slot SMALLINT UNSIGNED NOT NULL,
   durability SMALLINT UNSIGNED NULL,
-  metadata JSON NULL,
+  metadata LONGTEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY inventory_character_slot_uq (character_id, slot),
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
   action VARCHAR(96) NOT NULL,
   target_type VARCHAR(48) NULL,
   target_id VARCHAR(64) NULL,
-  payload JSON NULL,
+  payload LONGTEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX audit_action_idx (action, created_at),
   INDEX audit_character_idx (actor_character_id, created_at)
