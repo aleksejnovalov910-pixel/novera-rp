@@ -23,6 +23,11 @@
     submit.textContent = $('tabRegister')?.classList.contains('active') ? 'Начать историю' : 'Войти в NOVERA';
   };
 
+  window.noveraAuthBridgeAck = (mode) => {
+    if (!pending) return;
+    setDebug(mode === 'register' ? 'CEF подключён. Создаём аккаунт на сервере…' : 'CEF подключён. Проверяем аккаунт на сервере…');
+  };
+
   const originalAuthResult = window.noveraAuthResult;
   window.noveraAuthResult = (raw) => {
     finishPending();
@@ -59,12 +64,11 @@
     authCard.classList.add('auth-busy');
     submit.disabled = true;
     submit.textContent = registering ? 'Создаём аккаунт…' : 'Входим…';
-    setDebug('Отправляем данные на сервер…');
+    setDebug('Отправляем данные в RAGE:MP…');
 
     try {
       if (!window.mp || typeof window.mp.trigger !== 'function') throw new Error('RAGE CEF bridge unavailable');
       window.mp.trigger(registering ? 'novera:cef:register' : 'novera:cef:login', login, password);
-      setDebug('Запрос отправлен. Ожидаем ответ сервера…');
     } catch (error) {
       finishPending();
       setDebug(`CEF bridge error: ${String(error)}`, 'error');
@@ -78,8 +82,6 @@
     }, 10000);
   };
 
-  // Tell the RAGE client that DOM and JS are ready. The client re-enables the cursor here,
-  // which avoids playerReady/browser timing races seen on GTA5HOST.
   window.setTimeout(() => {
     try { window.mp?.trigger?.('novera:cef:ready'); } catch {}
   }, 50);
