@@ -9,3 +9,4 @@ export interface PlayerIdentity {
 }
 
 export * from './events/auth';
+export * from './events/characters';
