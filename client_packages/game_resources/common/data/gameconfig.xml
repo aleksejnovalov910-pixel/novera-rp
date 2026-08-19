@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NOVERA RP: server-sided game resource pool override.
+     Keep this file narrowly scoped; do not replace it with random "unlimited" configs. -->
+<CGameConfig>
+  <ConfigName>NOVERA RP</ConfigName>
+  <PoolSizes>
+    <PoolName>StaticBounds</PoolName>
+    <PoolSize value="60000" />
+  </PoolSizes>
+</CGameConfig>
