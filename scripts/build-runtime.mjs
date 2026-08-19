@@ -15,7 +15,7 @@ await build({ entryPoints:[resolve(root,'apps/client/src/index.ts')], outfile:re
 await cp(resolve(root,'apps/cef/public'),resolve(runtime,'client_packages/novera/cef'),{recursive:true});
 await cp(resolve(root,'packages/database/migrations'),resolve(runtime,'migrations'),{recursive:true});
 await cp(resolve(root,'deploy/gta5host/conf.json'),resolve(runtime,'conf.json'));
-await writeFile(resolve(runtime,'packages/novera/package.json'),JSON.stringify({name:'novera-runtime',version:'0.11.0',private:true,main:'index.js'},null,2));
+await writeFile(resolve(runtime,'packages/novera/package.json'),JSON.stringify({name:'novera-runtime',version:'0.14.0-alpha',private:true,main:'index.js'},null,2));
 await writeFile(resolve(runtime,'client_packages/index.js'),"require('./novera/client/index.js');\n");
-await writeFile(resolve(runtime,'DEPLOY.txt'),'NOVERA RP GTA5HOST runtime v0.11.0. Apply SQL migrations in order. Configure the database connection before launch. Upload the contents of this directory to the RAGE:MP server root.\n');
+await writeFile(resolve(runtime,'DEPLOY.txt'),'NOVERA RP GTA5HOST runtime v0.14.0 Alpha. Apply SQL migrations in order. Configure the database connection before launch. Upload the contents of this directory to the RAGE:MP server root.\n');
 console.log(`NOVERA runtime assembled: ${runtime}`);
