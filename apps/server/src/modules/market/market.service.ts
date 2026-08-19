@@ -29,7 +29,8 @@ export class MarketService {
       const sellerNet = Number(listing.price) - fee;
       await connection.execute('UPDATE character_wallets SET bank = bank + ? WHERE character_id = ?', [sellerNet, listing.seller_character_id]);
       await connection.execute('UPDATE marketplace_listings SET status = "sold" WHERE id = ?', [listingId]);
-      await connection.execute('INSERT INTO money_transactions (character_id, counterparty_character_id, type, amount, metadata) VALUES (?, ?, ?, ?, JSON_OBJECT("listingId", ?)), (?, ?, ?, ?, JSON_OBJECT("listingId", ?))', [buyerId, listing.seller_character_id, 'market_buy', -Number(listing.price), listingId.toString(), listing.seller_character_id, buyerId, 'market_sale', sellerNet, listingId.toString()]);
+      const metadata = JSON.stringify({ listingId: listingId.toString() });
+      await connection.execute('INSERT INTO money_transactions (character_id, counterparty_character_id, type, amount, metadata) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)', [buyerId, listing.seller_character_id, 'market_buy', -Number(listing.price), metadata, listing.seller_character_id, buyerId, 'market_sale', sellerNet, metadata]);
       await connection.commit(); return true;
     } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
   }

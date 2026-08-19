@@ -19,7 +19,7 @@ export class PropertyService {
       if (claimed.affectedRows !== 1) { await connection.rollback(); return false; }
       await connection.execute("INSERT INTO property_access (property_id, character_id, access_type) VALUES (?, ?, 'owner') ON DUPLICATE KEY UPDATE access_type='owner', revoked=0, expires_at=NULL", [propertyId, characterId]);
       await connection.execute("INSERT INTO property_owner_history (property_id, to_character_id, transfer_type, price) VALUES (?, ?, 'purchase', ?)", [propertyId, characterId, property.price]);
-      await connection.execute('INSERT INTO money_transactions (character_id, type, amount, metadata) VALUES (?, ?, ?, JSON_OBJECT("propertyId", ?))', [characterId, 'property_purchase', -Number(property.price), propertyId.toString()]);
+      await connection.execute('INSERT INTO money_transactions (character_id, type, amount, metadata) VALUES (?, ?, ?, ?)', [characterId, 'property_purchase', -Number(property.price), JSON.stringify({ propertyId: propertyId.toString() })]);
       await connection.commit(); return true;
     } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
   }
@@ -68,7 +68,8 @@ export class PropertyService {
       if (credit.affectedRows !== 1) { await connection.rollback(); return false; }
       await connection.execute('INSERT INTO property_rentals (property_id, tenant_character_id, landlord_character_id, rent_amount, paid_until) VALUES (?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY))', [propertyId, characterId, p.owner_character_id, amount]);
       await connection.execute("INSERT INTO property_access (property_id, character_id, access_type, revoked, expires_at) VALUES (?, ?, 'tenant', 0, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY)) ON DUPLICATE KEY UPDATE access_type='tenant', revoked=0, expires_at=VALUES(expires_at)", [propertyId, characterId]);
-      await connection.execute('INSERT INTO money_transactions (character_id, counterparty_character_id, type, amount, metadata) VALUES (?, ?, ?, ?, JSON_OBJECT("propertyId", ?)), (?, ?, ?, ?, JSON_OBJECT("propertyId", ?))', [characterId, p.owner_character_id, 'property_rent_out', -amount, propertyId.toString(), p.owner_character_id, characterId, 'property_rent_in', amount, propertyId.toString()]);
+      const metadata = JSON.stringify({ propertyId: propertyId.toString() });
+      await connection.execute('INSERT INTO money_transactions (character_id, counterparty_character_id, type, amount, metadata) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)', [characterId, p.owner_character_id, 'property_rent_out', -amount, metadata, p.owner_character_id, characterId, 'property_rent_in', amount, metadata]);
       await connection.commit(); return true;
     } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
   }

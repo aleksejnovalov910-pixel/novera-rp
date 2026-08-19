@@ -2,7 +2,7 @@ ALTER TABLE accounts ADD COLUMN admin_level INT UNSIGNED NOT NULL DEFAULT 0 AFTE
 
 CREATE TABLE IF NOT EXISTS character_settings (
   character_id BIGINT UNSIGNED PRIMARY KEY,
-  settings JSON NULL,
+  settings LONGTEXT NULL,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT character_settings_fk FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
@@ -95,11 +95,15 @@ CREATE TABLE IF NOT EXISTS fines (
 );
 
 CREATE TABLE IF NOT EXISTS vehicle_keys (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   vehicle_id BIGINT UNSIGNED NOT NULL,
   character_id BIGINT UNSIGNED NOT NULL,
-  key_type ENUM('owner','shared','temporary') NOT NULL DEFAULT 'shared',
+  key_type ENUM('owner','spare','temporary') NOT NULL DEFAULT 'spare',
+  revoked BOOLEAN NOT NULL DEFAULT FALSE,
   expires_at DATETIME NULL,
-  PRIMARY KEY (vehicle_id, character_id),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY vehicle_keys_vehicle_character_uq (vehicle_id, character_id),
+  INDEX vehicle_keys_character_idx (character_id),
   CONSTRAINT vehicle_key_vehicle_fk FOREIGN KEY (vehicle_id) REFERENCES owned_vehicles(id) ON DELETE CASCADE,
   CONSTRAINT vehicle_key_character_fk FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
@@ -110,7 +114,7 @@ CREATE TABLE IF NOT EXISTS vehicle_maintenance (
   service_type VARCHAR(48) NOT NULL,
   mileage DECIMAL(12,2) NOT NULL DEFAULT 0,
   cost BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  details JSON NULL,
+  details LONGTEXT NULL,
   serviced_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX vehicle_maintenance_idx (vehicle_id, serviced_at),
   CONSTRAINT vehicle_maintenance_vehicle_fk FOREIGN KEY (vehicle_id) REFERENCES owned_vehicles(id) ON DELETE CASCADE

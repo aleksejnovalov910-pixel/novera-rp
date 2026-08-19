@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS property_container_items (
   amount INT UNSIGNED NOT NULL DEFAULT 1,
   slot SMALLINT UNSIGNED NOT NULL,
   durability SMALLINT UNSIGNED NULL,
-  metadata JSON NULL,
+  metadata LONGTEXT NULL,
   UNIQUE KEY property_container_slot_uq (container_id, slot),
   CONSTRAINT property_container_item_fk FOREIGN KEY (container_id) REFERENCES property_containers(id) ON DELETE CASCADE
 );
