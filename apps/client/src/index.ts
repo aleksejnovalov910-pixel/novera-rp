@@ -2,29 +2,54 @@ import { AuthEvents, CharacterEvents, GameplayEvents, PhoneEvents, WorldEvents, 
 
 let uiBrowser: BrowserMp | null = null;
 let creatorCamera: CameraMp | null = null;
+let authCamera: CameraMp | null = null;
 let creatorActive = false;
+let authActive = false;
 let creatorYaw = 180;
 let creatorZoom = 2.15;
 let characterActive = false;
 let deviceOpen = false;
 const CREATOR_TARGET = new mp.Vector3(402.89, -996.76, -98.25);
+const AUTH_CAMERA = new mp.Vector3(-1045.0, -2744.5, 42.0);
+const AUTH_TARGET = new mp.Vector3(-1034.0, -2732.0, 21.0);
 
 function ensureBrowser(): BrowserMp { uiBrowser ??= mp.browsers.new('package://novera/cef/index.html'); return uiBrowser; }
 function execute(fn: string, payload?: string): void { ensureBrowser().execute(payload === undefined ? `${fn}?.()` : `${fn}?.(${JSON.stringify(payload)})`); }
+function setNativeUiVisible(visible:boolean): void { mp.game.ui.displayHud(visible); mp.game.ui.displayRadar(visible); try { mp.gui.chat.show(visible); } catch {} }
+function openAuthCamera(): void {
+  authActive = true;
+  characterActive = false;
+  deviceOpen = false;
+  mp.players.local.freezePosition(true);
+  mp.players.local.setAlpha(0);
+  setNativeUiVisible(false);
+  authCamera?.destroy();
+  authCamera = mp.cameras.new('default', AUTH_CAMERA, new mp.Vector3(0,0,0), 46);
+  authCamera.pointAtCoord(AUTH_TARGET.x,AUTH_TARGET.y,AUTH_TARGET.z);
+  authCamera.setActive(true);
+  mp.game.cam.renderScriptCams(true,true,1200,true,false);
+}
+function closeAuthCamera(): void {
+  authActive = false;
+  if(authCamera){authCamera.setActive(false);authCamera.destroy();authCamera=null;}
+  mp.game.cam.renderScriptCams(false,true,650,true,false);
+  mp.players.local.setAlpha(255);
+}
 function updateCreatorCamera(): void { if(!creatorCamera)return; const r=creatorYaw*Math.PI/180; const x=CREATOR_TARGET.x+Math.sin(r)*creatorZoom,y=CREATOR_TARGET.y+Math.cos(r)*creatorZoom; creatorCamera.setCoord(x,y,CREATOR_TARGET.z+.55); creatorCamera.pointAtCoord(CREATOR_TARGET.x,CREATOR_TARGET.y,CREATOR_TARGET.z+.35); }
-function openCreatorCamera(): void { creatorActive=true;creatorYaw=180;creatorZoom=2.15;mp.players.local.freezePosition(true);creatorCamera?.destroy();creatorCamera=mp.cameras.new('default',new mp.Vector3(402.89,-999,-97.7),new mp.Vector3(0,0,0),38);creatorCamera.setActive(true);updateCreatorCamera();mp.game.cam.renderScriptCams(true,false,0,true,false); }
+function openCreatorCamera(): void { closeAuthCamera();creatorActive=true;creatorYaw=180;creatorZoom=2.15;setNativeUiVisible(false);mp.players.local.freezePosition(true);mp.players.local.setAlpha(255);creatorCamera?.destroy();creatorCamera=mp.cameras.new('default',new mp.Vector3(402.89,-999,-97.7),new mp.Vector3(0,0,0),38);creatorCamera.setActive(true);updateCreatorCamera();mp.game.cam.renderScriptCams(true,false,0,true,false); }
 function closeCreatorCamera(): void { creatorActive=false;mp.players.local.freezePosition(false);if(creatorCamera){creatorCamera.setActive(false);creatorCamera.destroy();creatorCamera=null}mp.game.cam.renderScriptCams(false,false,0,true,false); }
 function applyAppearance(preview: CharacterCreatorPreview): void { const p=mp.players.local,hash=mp.game.joaat(preview.gender==='female'?'mp_f_freemode_01':'mp_m_freemode_01'); const apply=()=>{p.setHeadBlendData(preview.appearance.mother,preview.appearance.father,0,preview.appearance.mother,preview.appearance.father,0,preview.appearance.resemblance,preview.appearance.skinMix,0,false);p.setComponentVariation(2,preview.appearance.hair,0,0);p.setHairColor(preview.appearance.hairColor,preview.appearance.hairColor);p.setHeadOverlay(2,preview.appearance.eyebrow,1,0,0);p.setHeadOverlayColor(2,1,preview.appearance.eyebrowColor,preview.appearance.eyebrowColor);p.setHeadOverlay(1,preview.gender==='male'?preview.appearance.beard:255,1,0,0);if(preview.gender==='male')p.setHeadOverlayColor(1,1,preview.appearance.beardColor,preview.appearance.beardColor);p.setEyeColor(preview.appearance.eyeColor);p.setComponentVariation(3,15,0,0);p.setComponentVariation(4,preview.gender==='female'?15:21,0,0);p.setComponentVariation(6,preview.gender==='female'?5:34,0,0);p.setComponentVariation(8,15,0,0);p.setComponentVariation(11,15,0,0)}; if(p.model!==hash){p.model=hash;setTimeout(apply,120)}else apply(); }
 function openDevice(name: 'phone'|'tablet'|'inventory'|'settings'): void { if(!characterActive)return;deviceOpen=true;mp.gui.cursor.show(true,true);ensureBrowser().execute(`window.noveraOpenDevice?.(${JSON.stringify(name)})`);if(name==='phone')mp.events.callRemote(PhoneEvents.state);if(name==='tablet')mp.events.callRemote(WorldEvents.request); }
 function closeDevice(): void { deviceOpen=false;mp.gui.cursor.show(false,false); }
 
-mp.events.add('playerReady',()=>{ensureBrowser();mp.gui.cursor.show(true,true);mp.events.callRemote(AuthEvents.clientReady)});
+mp.events.add('playerReady',()=>{ensureBrowser();openAuthCamera();mp.gui.cursor.show(true,true);mp.events.callRemote(AuthEvents.clientReady)});
+mp.events.add('render',()=>{if(authActive||creatorActive){mp.game.ui.displayHud(false);mp.game.ui.displayRadar(false);}});
 mp.events.add(AuthEvents.result,(p:string)=>execute('window.noveraAuthResult',p));
 mp.events.add(AuthEvents.characters,(p:string)=>execute('window.noveraCharacters',p));
 mp.events.add(CharacterEvents.list,(p:string)=>execute('window.noveraCharacters',p));
 mp.events.add(CharacterEvents.result,(p:string)=>execute('window.noveraCharacterResult',p));
 mp.events.add(CharacterEvents.creatorOpen,(slot:number)=>{openCreatorCamera();ensureBrowser().execute(`window.noveraOpenCreator?.(${Number(slot)})`)});
-mp.events.add(CharacterEvents.selected,(p:string)=>{closeCreatorCamera();characterActive=true;execute('window.noveraCharacterSelected',p);mp.gui.cursor.show(false,false);mp.events.callRemote(GameplayEvents.bootstrap);mp.events.callRemote(WorldEvents.request)});
+mp.events.add(CharacterEvents.selected,(p:string)=>{closeAuthCamera();closeCreatorCamera();characterActive=true;setNativeUiVisible(true);execute('window.noveraCharacterSelected',p);mp.gui.cursor.show(false,false);mp.events.callRemote(GameplayEvents.bootstrap);mp.events.callRemote(WorldEvents.request)});
 mp.events.add(GameplayEvents.state,(p:string)=>execute('window.noveraGameplayState',p));
 mp.events.add(WorldEvents.result,(p:string)=>execute('window.noveraWorldState',p));
 mp.events.add(PhoneEvents.state,(p:string)=>execute('window.noveraPhoneState',p));

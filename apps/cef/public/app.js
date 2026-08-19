@@ -1,6 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
-  const auth = $('auth'), slots = $('slots'), creator = $('creator'), gameplay = $('gameplay');
+  const authScene = $('authScene'), auth = $('auth'), slots = $('slots'), creator = $('creator'), gameplay = $('gameplay');
   const status = $('status'), slotGrid = $('slotGrid'), stage = $('creatorStage');
   const overlay = $('overlay'), deviceTitle = $('deviceTitle'), deviceEyebrow = $('deviceEyebrow'), deviceHome = $('deviceHome'), deviceContent = $('deviceContent');
   let authMode = 'login', creatorSlot = 1, gender = 'male', dragging = false, lastX = 0;
@@ -9,14 +9,44 @@
 
   const trigger = (name, ...args) => { if (window.mp && typeof window.mp.trigger === 'function') window.mp.trigger(name, ...args); };
   const money = (v) => `$${Number(v || 0).toLocaleString('ru-RU')}`;
-  const toast = (message) => { status.textContent = message || ''; status.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => status.classList.remove('show'), 2800); };
-  const show = (name) => { auth.classList.toggle('hidden', name !== 'auth'); slots.classList.toggle('hidden', name !== 'slots'); creator.classList.toggle('hidden', name !== 'creator'); gameplay.classList.toggle('hidden', name !== 'gameplay'); };
+  const toast = (message) => { status.textContent = message || ''; status.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => status.classList.remove('show'), 3200); };
+  const show = (name) => {
+    authScene.classList.toggle('hidden', name !== 'auth');
+    auth.classList.toggle('hidden', name !== 'auth');
+    slots.classList.toggle('hidden', name !== 'slots');
+    creator.classList.toggle('hidden', name !== 'creator');
+    gameplay.classList.toggle('hidden', name !== 'gameplay');
+    $('brand').classList.toggle('hidden', name === 'auth' || name === 'gameplay');
+  };
   const appearance = () => ({ mother:+$('mother').value,father:+$('father').value,resemblance:+$('resemblance').value/100,skinMix:+$('skinMix').value/100,hair:+$('hair').value,hairColor:+$('hairColor').value,eyebrow:+$('eyebrow').value,eyebrowColor:+$('eyebrowColor').value,beard:+$('beard').value,beardColor:+$('beardColor').value,eyeColor:+$('eyeColor').value });
   const preview = () => trigger('novera:cef:creator:preview', JSON.stringify({ gender, appearance: appearance() }));
 
-  $('tabLogin').onclick = () => { authMode='login'; $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active'); $('authSubmit').textContent='Войти'; };
-  $('tabRegister').onclick = () => { authMode='register'; $('tabRegister').classList.add('active'); $('tabLogin').classList.remove('active'); $('authSubmit').textContent='Создать аккаунт'; };
-  $('authSubmit').onclick = () => trigger(authMode === 'login' ? 'novera:cef:login' : 'novera:cef:register', $('login').value.trim(), $('password').value);
+  function setAuthMode(mode) {
+    authMode = mode;
+    const registering = mode === 'register';
+    $('tabLogin').classList.toggle('active', !registering);
+    $('tabRegister').classList.toggle('active', registering);
+    $('confirmWrap').classList.toggle('hidden', !registering);
+    $('loginExtras').classList.toggle('hidden', registering);
+    $('authTitle').textContent = registering ? 'Создай аккаунт' : 'С возвращением';
+    $('authSubmit').textContent = registering ? 'Начать историю' : 'Войти в NOVERA';
+    $('authFootnote').textContent = registering ? 'Регистрируясь, ты принимаешь правила сервера и пользовательское соглашение.' : 'Продолжая, ты принимаешь правила сервера и пользовательское соглашение.';
+  }
+  $('tabLogin').onclick = () => setAuthMode('login');
+  $('tabRegister').onclick = () => setAuthMode('register');
+  $('forgotPassword').onclick = () => toast('Восстановление доступа появится в следующем обновлении.');
+  const remembered = localStorage.getItem('novera:login') || '';
+  if (remembered) { $('login').value = remembered; $('remember').checked = true; }
+  $('authSubmit').onclick = () => {
+    const login = $('login').value.trim(), password = $('password').value;
+    if (login.length < 3) return toast('Логин должен содержать минимум 3 символа.');
+    if (password.length < 6) return toast('Пароль должен содержать минимум 6 символов.');
+    if (authMode === 'register' && $('passwordConfirm').value !== password) return toast('Пароли не совпадают.');
+    if (authMode === 'login' && $('remember').checked) localStorage.setItem('novera:login', login); else if (authMode === 'login') localStorage.removeItem('novera:login');
+    trigger(authMode === 'login' ? 'novera:cef:login' : 'novera:cef:register', login, password);
+  };
+  ['login','password','passwordConfirm'].forEach((id)=>$(id).addEventListener('keydown',(e)=>{if(e.key==='Enter')$('authSubmit').click()}));
+
   document.querySelectorAll('[data-gender]').forEach((button) => button.onclick = () => { gender=button.dataset.gender; document.querySelectorAll('[data-gender]').forEach((b)=>b.classList.toggle('active',b===button)); const f=gender==='female'; $('beardLabel').style.display=f?'none':''; $('beardColorLabel').style.display=f?'none':''; preview(); });
   ['mother','father','resemblance','skinMix','hair','hairColor','eyebrow','eyebrowColor','beard','beardColor','eyeColor'].forEach((id)=>$(id).addEventListener('input',preview));
   $('createCharacter').onclick = () => trigger('novera:cef:character:create', JSON.stringify({ slot:creatorSlot, firstName:$('firstName').value.trim(), lastName:$('lastName').value.trim(), birthDate:$('birthDate').value, gender, appearance:appearance() }));
@@ -65,4 +95,5 @@
   window.noveraGameplayState=(raw)=>{const r=JSON.parse(raw);if(!r.ok){toast(r.message||'Ошибка');return}if(r.payload&&r.payload.money){game=r.payload;refreshHud()}else if(r.message)toast(r.message);if(!overlay.classList.contains('hidden')&&deviceTitle.textContent==='Инвентарь'&&r.ok)trigger('novera:cef:device:close')};
   window.noveraWorldState=(raw)=>{const r=JSON.parse(raw);if(r.ok)world={jobs:r.jobs||[],family:r.family||null,faction:r.faction||null}};
   window.noveraOpenDevice=(name)=>openDevice(name);
+  setAuthMode('login');
 })();

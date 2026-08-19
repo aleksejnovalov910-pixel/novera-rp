@@ -8,9 +8,33 @@
 </head>
 <body>
   <div class="shell">
-    <div id="brand" class="brand">NOVERA <span>RP</span></div>
+    <section id="authScene" class="auth-scene">
+      <div class="auth-vignette"></div>
+      <header class="auth-topbar">
+        <div class="brand-lockup"><div class="brand-mark">N</div><div><div class="brand-name">NOVERA</div><div class="brand-sub">ROLE PLAY</div></div></div>
+        <div class="server-meta"><span class="live-dot"></span><span>LOS SANTOS</span><span class="meta-separator"></span><span>ALPHA 0.15</span></div>
+      </header>
+      <div class="auth-copy">
+        <div class="eyebrow">WELCOME TO NOVERA</div>
+        <h1>Живи своей историей.<br><span>Не чужим сценарием.</span></h1>
+        <p>Город, где репутация, деньги, имущество и решения имеют последствия. Создай персонажа и начни путь с нуля.</p>
+        <div class="feature-row"><span>Экономика</span><span>Карьера</span><span>Недвижимость</span><span>Транспорт</span></div>
+      </div>
+      <section id="auth" class="auth-card">
+        <div class="auth-card-head"><div><div class="eyebrow">ACCOUNT ACCESS</div><h2 id="authTitle">С возвращением</h2></div><div class="secure-pill">● SECURE</div></div>
+        <div class="tabs"><button id="tabLogin" class="tab active">Вход</button><button id="tabRegister" class="tab">Регистрация</button></div>
+        <label class="field"><span>Логин</span><input id="login" autocomplete="off" maxlength="32" placeholder="Введите логин" /></label>
+        <label class="field"><span>Пароль</span><input id="password" type="password" maxlength="128" placeholder="Введите пароль" /></label>
+        <label id="confirmWrap" class="field hidden"><span>Повторите пароль</span><input id="passwordConfirm" type="password" maxlength="128" placeholder="Повторите пароль" /></label>
+        <div id="loginExtras" class="auth-extras"><label class="remember"><input id="remember" type="checkbox"/><span>Запомнить логин</span></label><button id="forgotPassword" class="link-button" type="button">Забыли пароль?</button></div>
+        <button id="authSubmit" class="primary auth-primary">Войти в NOVERA</button>
+        <p id="authFootnote" class="auth-footnote">Продолжая, ты принимаешь правила сервера и пользовательское соглашение.</p>
+      </section>
+      <footer class="auth-footer"><span>NOVERA RP © 2026</span><span>RAGE:MP</span></footer>
+    </section>
+
+    <div id="brand" class="brand hidden">NOVERA <span>RP</span></div>
     <div id="status" class="status"></div>
-    <section id="auth" class="panel auth-panel"><div class="eyebrow">WELCOME TO NOVERA</div><h1>Твоя история начинается здесь</h1><div class="tabs"><button id="tabLogin" class="tab active">Вход</button><button id="tabRegister" class="tab">Регистрация</button></div><input id="login" autocomplete="off" maxlength="32" placeholder="Логин" /><input id="password" type="password" maxlength="128" placeholder="Пароль" /><button id="authSubmit" class="primary">Войти</button></section>
     <section id="slots" class="panel slots-panel hidden"><div class="header-row"><div><div class="eyebrow">CHARACTERS</div><h1>Выбор персонажа</h1></div><span>3 слота</span></div><div id="slotGrid" class="slot-grid"></div></section>
     <section id="creator" class="creator hidden"><aside class="creator-panel"><div class="header-row"><div><div class="eyebrow">IDENTITY</div><h1>Создание персонажа</h1></div><span id="creatorSlotLabel">Слот</span></div><div class="segmented"><button data-gender="male" class="active">Мужчина</button><button data-gender="female">Женщина</button></div><div class="grid2"><input id="firstName" placeholder="Имя" maxlength="24"/><input id="lastName" placeholder="Фамилия" maxlength="24"/></div><label>Дата рождения<input id="birthDate" type="date" min="1940-01-01" /></label><h2>Родители</h2><div class="grid2"><label>Мать<input id="mother" type="range" min="0" max="45" value="21" /></label><label>Отец<input id="father" type="range" min="0" max="45" value="0" /></label></div><label>Сходство<input id="resemblance" type="range" min="0" max="100" value="50" /></label><label>Тон кожи<input id="skinMix" type="range" min="0" max="100" value="50" /></label><h2>Внешность</h2><div class="grid2"><label>Причёска<input id="hair" type="range" min="0" max="36" value="0" /></label><label>Цвет волос<input id="hairColor" type="range" min="0" max="63" value="0" /></label><label>Брови<input id="eyebrow" type="range" min="0" max="33" value="0" /></label><label>Цвет бровей<input id="eyebrowColor" type="range" min="0" max="63" value="0" /></label><label id="beardLabel">Борода<input id="beard" type="range" min="0" max="28" value="0" /></label><label id="beardColorLabel">Цвет бороды<input id="beardColor" type="range" min="0" max="63" value="0" /></label><label>Цвет глаз<input id="eyeColor" type="range" min="0" max="31" value="0" /></label></div><button id="createCharacter" class="primary">Создать персонажа</button><p class="hint">ЛКМ + движение — вращение · колесо — приближение</p></aside><div id="creatorStage" class="creator-stage"></div></section>
     <section id="gameplay" class="gameplay hidden"><div class="hud"><div class="hud-brand">NOVERA</div><div class="hud-money"><span>Наличные</span><b id="hudCash">$0</b></div><div class="hud-money"><span>Банк</span><b id="hudBank">$0</b></div></div><div class="hints"><span>↑ Телефон</span><span>↓ Планшет</span><span>F2 Настройки</span><span>I Инвентарь</span></div><div id="overlay" class="overlay hidden"><div class="device panel"><div class="device-head"><div><div class="eyebrow" id="deviceEyebrow">NOVERA OS</div><h2 id="deviceTitle">Телефон</h2></div><button id="closeDevice" class="ghost">✕</button></div><div id="deviceHome" class="app-grid"></div><div id="deviceContent" class="device-content"></div></div></div></section>
