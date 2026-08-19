@@ -1,6 +1,6 @@
 {
   "name": "novera-rp",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "NOVERA RP — next-generation GTA V Role Play server for RAGE:MP",
   "packageManager": "pnpm@10.15.0",
@@ -10,8 +10,11 @@
     "dev": "pnpm --parallel -r dev",
     "db:migrate": "pnpm --filter @novera/database migrate",
     "db:check": "pnpm --filter @novera/database typecheck",
-    "runtime:build": "pnpm build && node scripts/build-runtime.mjs",
+    "runtime:build": "pnpm typecheck && node scripts/build-runtime.mjs",
     "runtime:validate": "node scripts/validate-runtime.mjs"
   },
-  "engines": { "node": ">=22.0.0" }
+  "devDependencies": {
+    "esbuild": "^0.25.9"
+  },
+  "engines": { "node": ">=18.0.0" }
 }

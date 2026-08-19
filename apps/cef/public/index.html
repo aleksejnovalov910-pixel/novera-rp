@@ -2,59 +2,65 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NOVERA RP</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="shell">
-    <div class="brand">NOVERA <span>RP</span></div>
+    <div id="brand" class="brand">NOVERA <span>RP</span></div>
     <div id="status" class="status"></div>
 
     <section id="auth" class="panel auth-panel">
-      <div class="tabs">
-        <button id="tabLogin" class="tab active">Вход</button>
-        <button id="tabRegister" class="tab">Регистрация</button>
-      </div>
+      <div class="eyebrow">WELCOME TO NOVERA</div><h1>Твоя история начинается здесь</h1>
+      <div class="tabs"><button id="tabLogin" class="tab active">Вход</button><button id="tabRegister" class="tab">Регистрация</button></div>
       <input id="login" autocomplete="off" maxlength="32" placeholder="Логин" />
       <input id="password" type="password" maxlength="128" placeholder="Пароль" />
       <button id="authSubmit" class="primary">Войти</button>
     </section>
 
-    <section id="slots" class="panel hidden">
-      <div class="header-row"><h1>Персонажи</h1><span>3 слота</span></div>
+    <section id="slots" class="panel slots-panel hidden">
+      <div class="header-row"><div><div class="eyebrow">CHARACTERS</div><h1>Выбор персонажа</h1></div><span>3 слота</span></div>
       <div id="slotGrid" class="slot-grid"></div>
     </section>
 
     <section id="creator" class="creator hidden">
       <aside class="creator-panel">
-        <div class="header-row"><h1>Создание персонажа</h1><span id="creatorSlotLabel">Слот</span></div>
+        <div class="header-row"><div><div class="eyebrow">IDENTITY</div><h1>Создание персонажа</h1></div><span id="creatorSlotLabel">Слот</span></div>
         <div class="segmented"><button data-gender="male" class="active">Мужчина</button><button data-gender="female">Женщина</button></div>
         <div class="grid2"><input id="firstName" placeholder="Имя" maxlength="24"/><input id="lastName" placeholder="Фамилия" maxlength="24"/></div>
         <label>Дата рождения<input id="birthDate" type="date" min="1940-01-01" /></label>
-
         <h2>Родители</h2>
-        <div class="grid2">
-          <label>Мать<input id="mother" type="range" min="0" max="45" value="21" /></label>
-          <label>Отец<input id="father" type="range" min="0" max="45" value="0" /></label>
-        </div>
+        <div class="grid2"><label>Мать<input id="mother" type="range" min="0" max="45" value="21" /></label><label>Отец<input id="father" type="range" min="0" max="45" value="0" /></label></div>
         <label>Сходство<input id="resemblance" type="range" min="0" max="100" value="50" /></label>
         <label>Тон кожи<input id="skinMix" type="range" min="0" max="100" value="50" /></label>
-
         <h2>Внешность</h2>
         <div class="grid2">
-          <label>Причёска<input id="hair" type="range" min="0" max="36" value="0" /></label>
-          <label>Цвет волос<input id="hairColor" type="range" min="0" max="63" value="0" /></label>
-          <label>Брови<input id="eyebrow" type="range" min="0" max="33" value="0" /></label>
-          <label>Цвет бровей<input id="eyebrowColor" type="range" min="0" max="63" value="0" /></label>
-          <label id="beardLabel">Борода<input id="beard" type="range" min="0" max="28" value="0" /></label>
-          <label id="beardColorLabel">Цвет бороды<input id="beardColor" type="range" min="0" max="63" value="0" /></label>
+          <label>Причёска<input id="hair" type="range" min="0" max="36" value="0" /></label><label>Цвет волос<input id="hairColor" type="range" min="0" max="63" value="0" /></label>
+          <label>Брови<input id="eyebrow" type="range" min="0" max="33" value="0" /></label><label>Цвет бровей<input id="eyebrowColor" type="range" min="0" max="63" value="0" /></label>
+          <label id="beardLabel">Борода<input id="beard" type="range" min="0" max="28" value="0" /></label><label id="beardColorLabel">Цвет бороды<input id="beardColor" type="range" min="0" max="63" value="0" /></label>
           <label>Цвет глаз<input id="eyeColor" type="range" min="0" max="31" value="0" /></label>
         </div>
         <button id="createCharacter" class="primary">Создать персонажа</button>
-        <p class="hint">Зажми ЛКМ и двигай мышь — вращение. Колесо — приближение.</p>
+        <p class="hint">ЛКМ + движение — вращение · колесо — приближение</p>
       </aside>
       <div id="creatorStage" class="creator-stage"></div>
+    </section>
+
+    <section id="gameplay" class="gameplay hidden">
+      <div class="hud">
+        <div class="hud-brand">NOVERA</div>
+        <div class="hud-money"><span>Наличные</span><b id="hudCash">$0</b></div>
+        <div class="hud-money"><span>Банк</span><b id="hudBank">$0</b></div>
+      </div>
+      <div class="hints"><span>↑ Телефон</span><span>↓ Планшет</span><span>F2 Настройки</span><span>I Инвентарь</span></div>
+      <div id="overlay" class="overlay hidden">
+        <div class="device panel">
+          <div class="device-head"><div><div class="eyebrow" id="deviceEyebrow">NOVERA OS</div><h2 id="deviceTitle">Телефон</h2></div><button id="closeDevice" class="ghost">✕</button></div>
+          <div id="deviceHome" class="app-grid"></div>
+          <div id="deviceContent" class="device-content"></div>
+        </div>
+      </div>
     </section>
   </div>
   <script src="app.js"></script>
