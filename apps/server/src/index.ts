@@ -23,6 +23,7 @@ import { registerCharacterEvents } from './runtime/character.events';
 import { registerGameplayEvents } from './runtime/gameplay.events';
 import { registerWorldEvents } from './runtime/world.events';
 import { registerVehicleEvents } from './runtime/vehicle.events';
+import { registerPropertyEvents } from './runtime/property.events';
 import { registerExtendedEvents } from './runtime/extended.events';
 import { registerRoleplayEvents } from './runtime/roleplay.events';
 import { createRateLimitStore } from './services/rate-limit';
@@ -36,6 +37,7 @@ async function boot(): Promise<void> {
   registerGameplayEvents({gameplay,logger:logger.child('gameplay')});
   registerWorldEvents({jobs,vehicles,properties,social,market,logger:logger.child('world')});
   registerVehicleEvents({vehicles,logger:logger.child('vehicles')});
+  registerPropertyEvents({properties,logger:logger.child('properties')});
   registerExtendedEvents({phone,business,government,admin,guard,logger:logger.child('extended')});
   registerRoleplayEvents({organizations,police,medical,progression,guard,logger:logger.child('roleplay')});
   mp.events.add('playerJoin',(player:PlayerMp)=>{player.dimension=1000+player.id;logger.info('player connected',{player:player.name,id:player.id})});
