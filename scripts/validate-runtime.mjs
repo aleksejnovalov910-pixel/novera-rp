@@ -15,7 +15,8 @@ const required = [
   'migrations/0004_extended_core.sql',
   'migrations/0005_roleplay_core.sql',
   'migrations/0006_onboarding_seed.sql',
-  'migrations/0007_economy_inventory_hardening.sql'
+  'migrations/0007_economy_inventory_hardening.sql',
+  'migrations/0008_vehicle_system_2.sql'
 ];
 
 for (const file of required) await access(resolve(runtime, file));
