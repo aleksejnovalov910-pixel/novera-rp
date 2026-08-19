@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
     "types": ["@ragempcommunity/types-server", "node"]
   },
   "include": ["src/**/*.ts"]
