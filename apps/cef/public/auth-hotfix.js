@@ -4,6 +4,13 @@
   const authCard = $('auth');
   if (!submit || !authCard) return;
 
+  const meta = document.querySelector('.server-meta');
+  if (meta) {
+    Array.from(meta.querySelectorAll('span')).forEach((el) => {
+      if ((el.textContent || '').includes('ALPHA')) el.textContent = 'ALPHA 0.15.3';
+    });
+  }
+
   const message = document.createElement('div');
   message.id = 'authDebug';
   message.className = 'auth-debug';
@@ -22,6 +29,22 @@
     submit.disabled = false;
     submit.textContent = $('tabRegister')?.classList.contains('active') ? 'Начать историю' : 'Войти в NOVERA';
   };
+  const showNotice = (text) => {
+    const status = $('status');
+    if (!status || !text) return;
+    status.textContent = text;
+    status.classList.add('show');
+    window.clearTimeout(showNotice.timer);
+    showNotice.timer = window.setTimeout(() => status.classList.remove('show'), 3200);
+  };
+  const showCharacters = () => {
+    $('authScene')?.classList.add('hidden');
+    authCard.classList.add('hidden');
+    $('slots')?.classList.remove('hidden');
+    $('creator')?.classList.add('hidden');
+    $('gameplay')?.classList.add('hidden');
+    $('brand')?.classList.remove('hidden');
+  };
 
   // Internal bridge acknowledgement is intentionally invisible to players.
   window.noveraAuthBridgeAck = () => {};
@@ -29,14 +52,41 @@
   const originalAuthResult = window.noveraAuthResult;
   window.noveraAuthResult = (raw) => {
     finishPending();
+    let result;
     try {
-      const result = JSON.parse(raw);
-      setMessage(result.ok ? '' : (result.message || 'Не удалось выполнить запрос.'), result.ok ? 'ok' : 'error');
+      result = JSON.parse(raw);
+      if (result.ok) {
+        setMessage('');
+        showNotice(result.message || 'Готово.');
+      } else {
+        setMessage(result.message || 'Не удалось выполнить запрос.', 'error');
+      }
     } catch {
       setMessage('Не удалось обработать ответ сервера. Повтори попытку.', 'error');
+      return;
     }
-    if (typeof originalAuthResult === 'function') originalAuthResult(raw);
+
+    if (typeof originalAuthResult === 'function') {
+      try { originalAuthResult(raw); } catch {}
+    }
+
+    // Some legacy RAGE:MP CEF builds occasionally fail to repaint the screen
+    // after the original handler toggles classes. Force the authenticated view.
+    if (result.ok) {
+      showCharacters();
+      window.setTimeout(showCharacters, 50);
+      window.setTimeout(showCharacters, 250);
+    }
   };
+
+  const originalCharacters = window.noveraCharacters;
+  if (typeof originalCharacters === 'function') {
+    window.noveraCharacters = (raw) => {
+      showCharacters();
+      originalCharacters(raw);
+      window.setTimeout(showCharacters, 50);
+    };
+  }
 
   submit.onclick = () => {
     if (pending) return;
