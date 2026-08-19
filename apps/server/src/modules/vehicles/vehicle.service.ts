@@ -104,7 +104,7 @@ export class VehicleService {
   private async charge(connection: any, characterId: bigint, amount: number, type: string, vehicleId: bigint): Promise<boolean> {
     if (!Number.isSafeInteger(amount) || amount < 0 || amount > MAX_MONEY) return false;
     await connection.execute('INSERT IGNORE INTO character_wallets (character_id) VALUES (?)', [characterId]);
-    const [result] = await connection.execute<any>('UPDATE character_wallets SET bank = bank - ? WHERE character_id = ? AND bank >= ?', [amount, characterId, amount]);
+    const [result] = await connection.execute('UPDATE character_wallets SET bank = bank - ? WHERE character_id = ? AND bank >= ?', [amount, characterId, amount]);
     if (result.affectedRows !== 1) return false;
     await connection.execute('INSERT INTO money_transactions (character_id, type, amount, metadata) VALUES (?, ?, ?, JSON_OBJECT(\'vehicleId\', ?))', [characterId, type, -amount, vehicleId.toString()]);
     return true;
