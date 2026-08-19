@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NOVERA RP</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth-hotfix.css" />
 </head>
 <body>
   <div class="shell">
@@ -12,7 +13,7 @@
       <div class="auth-vignette"></div>
       <header class="auth-topbar">
         <div class="brand-lockup"><div class="brand-mark">N</div><div><div class="brand-name">NOVERA</div><div class="brand-sub">ROLE PLAY</div></div></div>
-        <div class="server-meta"><span class="live-dot"></span><span>LOS SANTOS</span><span class="meta-separator"></span><span>ALPHA 0.15</span></div>
+        <div class="server-meta"><span class="live-dot"></span><span>LOS SANTOS</span><span class="meta-separator"></span><span>ALPHA 0.15.1</span></div>
       </header>
       <div class="auth-copy">
         <div class="eyebrow">WELCOME TO NOVERA</div>
@@ -22,12 +23,12 @@
       </div>
       <section id="auth" class="auth-card">
         <div class="auth-card-head"><div><div class="eyebrow">ACCOUNT ACCESS</div><h2 id="authTitle">С возвращением</h2></div><div class="secure-pill">● SECURE</div></div>
-        <div class="tabs"><button id="tabLogin" class="tab active">Вход</button><button id="tabRegister" class="tab">Регистрация</button></div>
-        <label class="field"><span>Логин</span><input id="login" autocomplete="off" maxlength="32" placeholder="Введите логин" /></label>
-        <label class="field"><span>Пароль</span><input id="password" type="password" maxlength="128" placeholder="Введите пароль" /></label>
-        <label id="confirmWrap" class="field hidden"><span>Повторите пароль</span><input id="passwordConfirm" type="password" maxlength="128" placeholder="Повторите пароль" /></label>
+        <div class="tabs"><button id="tabLogin" class="tab active" type="button">Вход</button><button id="tabRegister" class="tab" type="button">Регистрация</button></div>
+        <label class="field"><span>Логин</span><input id="login" autocomplete="username" maxlength="32" placeholder="Введите логин" /></label>
+        <label class="field"><span>Пароль</span><input id="password" type="password" autocomplete="current-password" maxlength="128" placeholder="Минимум 8 символов" /></label>
+        <label id="confirmWrap" class="field hidden"><span>Повторите пароль</span><input id="passwordConfirm" type="password" autocomplete="new-password" maxlength="128" placeholder="Повторите пароль" /></label>
         <div id="loginExtras" class="auth-extras"><label class="remember"><input id="remember" type="checkbox"/><span>Запомнить логин</span></label><button id="forgotPassword" class="link-button" type="button">Забыли пароль?</button></div>
-        <button id="authSubmit" class="primary auth-primary">Войти в NOVERA</button>
+        <button id="authSubmit" class="primary auth-primary" type="button">Войти в NOVERA</button>
         <p id="authFootnote" class="auth-footnote">Продолжая, ты принимаешь правила сервера и пользовательское соглашение.</p>
       </section>
       <footer class="auth-footer"><span>NOVERA RP © 2026</span><span>RAGE:MP</span></footer>
@@ -41,5 +42,6 @@
   </div>
   <script src="app.js"></script>
   <script src="device.js"></script>
+  <script src="auth-hotfix.js"></script>
 </body>
 </html>
