@@ -9,6 +9,8 @@ const required = [
   'client_packages/index.js',
   'client_packages/novera/client/index.js',
   'client_packages/novera/cef/index.html',
+  'client_packages/novera/cef/app.js',
+  'client_packages/novera/cef/device.js',
   'migrations/0001_accounts_characters.sql',
   'migrations/0002_character_creator.sql',
   'migrations/0003_gameplay_core.sql',
@@ -25,4 +27,6 @@ for (const file of required) await access(resolve(runtime, file));
 const conf = JSON.parse(await readFile(resolve(runtime, 'conf.json'), 'utf8'));
 if (conf.name !== 'NOVERA RP') throw new Error('runtime conf.json has wrong server name');
 if (Number(conf.maxplayers) !== 500) throw new Error('runtime conf.json must use 500 slots');
+const deploy = await readFile(resolve(runtime,'DEPLOY.txt'),'utf8');
+if (!deploy.includes('v0.14.0 Alpha')) throw new Error('runtime must be marked as v0.14 Alpha');
 console.log('NOVERA runtime validation passed');

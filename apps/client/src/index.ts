@@ -1,4 +1,4 @@
-import { AuthEvents, CharacterEvents, GameplayEvents, WorldEvents, type CharacterCreatorPreview } from '@novera/shared';
+import { AuthEvents, CharacterEvents, GameplayEvents, PhoneEvents, WorldEvents, type CharacterCreatorPreview } from '@novera/shared';
 
 let uiBrowser: BrowserMp | null = null;
 let creatorCamera: CameraMp | null = null;
@@ -15,7 +15,7 @@ function updateCreatorCamera(): void { if(!creatorCamera)return; const r=creator
 function openCreatorCamera(): void { creatorActive=true;creatorYaw=180;creatorZoom=2.15;mp.players.local.freezePosition(true);creatorCamera?.destroy();creatorCamera=mp.cameras.new('default',new mp.Vector3(402.89,-999,-97.7),new mp.Vector3(0,0,0),38);creatorCamera.setActive(true);updateCreatorCamera();mp.game.cam.renderScriptCams(true,false,0,true,false); }
 function closeCreatorCamera(): void { creatorActive=false;mp.players.local.freezePosition(false);if(creatorCamera){creatorCamera.setActive(false);creatorCamera.destroy();creatorCamera=null}mp.game.cam.renderScriptCams(false,false,0,true,false); }
 function applyAppearance(preview: CharacterCreatorPreview): void { const p=mp.players.local,hash=mp.game.joaat(preview.gender==='female'?'mp_f_freemode_01':'mp_m_freemode_01'); const apply=()=>{p.setHeadBlendData(preview.appearance.mother,preview.appearance.father,0,preview.appearance.mother,preview.appearance.father,0,preview.appearance.resemblance,preview.appearance.skinMix,0,false);p.setComponentVariation(2,preview.appearance.hair,0,0);p.setHairColor(preview.appearance.hairColor,preview.appearance.hairColor);p.setHeadOverlay(2,preview.appearance.eyebrow,1,0,0);p.setHeadOverlayColor(2,1,preview.appearance.eyebrowColor,preview.appearance.eyebrowColor);p.setHeadOverlay(1,preview.gender==='male'?preview.appearance.beard:255,1,0,0);if(preview.gender==='male')p.setHeadOverlayColor(1,1,preview.appearance.beardColor,preview.appearance.beardColor);p.setEyeColor(preview.appearance.eyeColor);p.setComponentVariation(3,15,0,0);p.setComponentVariation(4,preview.gender==='female'?15:21,0,0);p.setComponentVariation(6,preview.gender==='female'?5:34,0,0);p.setComponentVariation(8,15,0,0);p.setComponentVariation(11,15,0,0)}; if(p.model!==hash){p.model=hash;setTimeout(apply,120)}else apply(); }
-function openDevice(name: 'phone'|'tablet'|'inventory'|'settings'): void { if(!characterActive)return;deviceOpen=true;mp.gui.cursor.show(true,true);ensureBrowser().execute(`window.noveraOpenDevice?.(${JSON.stringify(name)})`); }
+function openDevice(name: 'phone'|'tablet'|'inventory'|'settings'): void { if(!characterActive)return;deviceOpen=true;mp.gui.cursor.show(true,true);ensureBrowser().execute(`window.noveraOpenDevice?.(${JSON.stringify(name)})`);if(name==='phone')mp.events.callRemote(PhoneEvents.state);if(name==='tablet')mp.events.callRemote(WorldEvents.request); }
 function closeDevice(): void { deviceOpen=false;mp.gui.cursor.show(false,false); }
 
 mp.events.add('playerReady',()=>{ensureBrowser();mp.gui.cursor.show(true,true);mp.events.callRemote(AuthEvents.clientReady)});
@@ -27,6 +27,8 @@ mp.events.add(CharacterEvents.creatorOpen,(slot:number)=>{openCreatorCamera();en
 mp.events.add(CharacterEvents.selected,(p:string)=>{closeCreatorCamera();characterActive=true;execute('window.noveraCharacterSelected',p);mp.gui.cursor.show(false,false);mp.events.callRemote(GameplayEvents.bootstrap);mp.events.callRemote(WorldEvents.request)});
 mp.events.add(GameplayEvents.state,(p:string)=>execute('window.noveraGameplayState',p));
 mp.events.add(WorldEvents.result,(p:string)=>execute('window.noveraWorldState',p));
+mp.events.add(PhoneEvents.state,(p:string)=>execute('window.noveraPhoneState',p));
+mp.events.add(PhoneEvents.conversation,(p:string)=>execute('window.noveraPhoneConversation',p));
 
 mp.events.add('novera:cef:login',(l:string,p:string)=>mp.events.callRemote(AuthEvents.login,JSON.stringify({login:l,password:p})));
 mp.events.add('novera:cef:register',(l:string,p:string)=>mp.events.callRemote(AuthEvents.register,JSON.stringify({login:l,password:p})));
@@ -45,6 +47,10 @@ mp.events.add('novera:cef:inventory:move',(from:number,to:number)=>mp.events.cal
 mp.events.add('novera:cef:inventory:split',(from:number,to:number,amount:number)=>mp.events.callRemote(GameplayEvents.inventorySplit,Number(from),Number(to),Number(amount)));
 mp.events.add('novera:cef:inventory:use',(slot:number)=>mp.events.callRemote(GameplayEvents.inventoryUse,Number(slot)));
 mp.events.add('novera:cef:vehicle:spawn',(id:string)=>mp.events.callRemote(WorldEvents.vehicleSpawn,id));
+mp.events.add('novera:cef:phone:state',()=>mp.events.callRemote(PhoneEvents.state));
+mp.events.add('novera:cef:phone:add-contact',(id:string,alias:string)=>mp.events.callRemote(PhoneEvents.addContact,String(id),String(alias)));
+mp.events.add('novera:cef:phone:conversation',(id:string)=>mp.events.callRemote(PhoneEvents.conversation,String(id)));
+mp.events.add('novera:cef:phone:message',(id:string,body:string)=>mp.events.callRemote(PhoneEvents.sendMessage,String(id),String(body)));
 
 mp.keys.bind(0x26,true,()=>{if(!deviceOpen)openDevice('phone');else closeDevice()});
 mp.keys.bind(0x28,true,()=>{if(!deviceOpen)openDevice('tablet');else closeDevice()});
