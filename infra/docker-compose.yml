@@ -1,0 +1,23 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: novera
+      MYSQL_USER: novera
+      MYSQL_PASSWORD: novera
+      MYSQL_ROOT_PASSWORD: novera_root
+    ports:
+      - "3306:3306"
+    volumes:
+      - novera_mysql:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - novera_redis:/data
+
+volumes:
+  novera_mysql:
+  novera_redis:

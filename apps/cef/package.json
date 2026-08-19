@@ -1,0 +1,11 @@
+{
+  "name": "@novera/cef",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo lint:@novera/cef"
+  },
+  "devDependencies": { "typescript": "^5.9.2" }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@novera/client",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo lint:@novera/client"
+  },
+  "dependencies": { "@novera/shared": "workspace:*" },
+  "devDependencies": {
+    "@ragempcommunity/types-client": "^2.1.9",
+    "typescript": "^5.9.2"
+  }
+}

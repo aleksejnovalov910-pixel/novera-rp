@@ -1,0 +1,24 @@
+{
+  "name": "@novera/server",
+  "version": "0.2.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo lint:@novera/server"
+  },
+  "dependencies": {
+    "@novera/config": "workspace:*",
+    "@novera/database": "workspace:*",
+    "@novera/logging": "workspace:*",
+    "@novera/shared": "workspace:*",
+    "argon2": "^0.45.1",
+    "redis": "^6.1.0"
+  },
+  "devDependencies": {
+    "@ragempcommunity/types-server": "^2.1.9",
+    "@types/node": "^22.17.2",
+    "typescript": "^5.9.2"
+  }
+}
