@@ -75,10 +75,7 @@
     document.body.classList.remove('character-selection-active');
   };
 
-  // Always start in AUTH LOCK. A character list is ignored until the server
-  // has explicitly returned a successful auth result in this browser session.
   showAuth();
-
   window.noveraAuthBridgeAck = () => {};
 
   const originalAuthResult = window.noveraAuthResult;
@@ -93,7 +90,6 @@
         showNotice(result.message || 'Готово.');
       } else {
         authGranted = false;
-        showAuth();
         setMessage(result.message || 'Не удалось выполнить запрос.', 'error');
       }
     } catch {
@@ -107,8 +103,10 @@
       try { originalAuthResult(raw); } catch {}
     }
 
-    // Do NOT open character selection here. Wait for AuthEvents.characters.
-    if (!result.ok) showAuth();
+    // app.js historically switches to slots on any successful auth result.
+    // Override that immediately: slots are allowed only after the server sends
+    // the authenticated character list for this browser session.
+    showAuth();
   };
 
   const originalCharacters = window.noveraCharacters;
