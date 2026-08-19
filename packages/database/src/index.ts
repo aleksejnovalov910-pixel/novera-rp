@@ -26,4 +26,4 @@ export function createDatabase(databaseUrl: string) {
 }
 
 export { accounts, characters } from './schema/accounts';
-export { eq } from 'drizzle-orm';
+export { and, eq, isNull } from 'drizzle-orm';
