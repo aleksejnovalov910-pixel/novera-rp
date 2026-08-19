@@ -2,12 +2,12 @@
 
 From-scratch GTA V Role Play server for RAGE:MP with a server-authoritative TypeScript architecture, MySQL persistence and unified CEF interface.
 
-## v0.10.0 — economy & inventory hardening
+## v0.14.1 Alpha — GTA5HOST deployment hardening
 
-The source contains account/auth security, three character slots, GTA freemode creator, first-spawn onboarding, HUD/devices, cash/bank, inventory, vehicles, properties, jobs, factions, families, businesses, V-Market, phone persistence, government fines/licenses, Police wanted/cases/evidence, EMS injuries/medical records, progression, reports/admin foundations and anti-abuse event guards.
+The Alpha source now includes account/auth security, three character slots, GTA freemode creator, first-spawn onboarding, HUD/devices, cash/bank, inventory, Vehicle System 2.0, Property & Housing 2.0, Jobs & Career 2.0, factions, families, businesses, V-Market foundations, phone contacts/messages, government fines/licenses, Police wanted/cases/evidence, EMS injuries/medical records, progression, reports/admin foundations and anti-abuse event guards.
 
-v0.10.0 strengthens the player economy and item runtime: every character receives a unique NOVERA Bank account number, bank-to-bank transfers are transactional and auditable, frozen accounts are supported, money overflow is guarded, inventory stacks can be split server-side, usable items are validated and consumed server-side, and item usage is written to an audit log. The CEF bank and inventory shells expose these actions without trusting client balances or item state.
+The GTA5HOST release pipeline produces an FTP-ready runtime for RAGE:MP 1.1 old / 500 slots. v0.14.1 adds a host-friendly `novera.config.json`, so MySQL credentials can be configured without relying on panel environment-variable support. Environment variables still override the file when available. Redis remains optional and falls back to an in-memory rate-limit store.
 
-A GTA5HOST-oriented release pipeline bundles the server/client code and uploads an FTP-ready runtime artifact from GitHub Actions. The target remains RAGE:MP 1.1 old with 500 slots.
+The runtime contains `START_HERE.txt`, `conf.json`, the server package, client package, CEF files, all numbered SQL migrations and a generated `migrations/ALL_MIGRATIONS.sql` for one-import phpMyAdmin setup. Distribution validation rejects embedded real database credentials and checks the expected GTA5HOST port, slot count, Alpha version and migration set.
 
-**The host is intentionally untouched.** Source status is IMPLEMENTED/INTEGRATED, not TESTED/PRODUCTION READY. We continue feature/content and CI correction before the first upload; after that, host-console errors become the source of truth for compatibility fixes.
+**Runtime/CI status:** IMPLEMENTED + INTEGRATED + BUILD-VALIDATED. It is not yet RAGE:MP runtime-tested on GTA5HOST; the first host launch is the next compatibility milestone, and host-console output will be the source of truth for any remaining runtime fixes.
