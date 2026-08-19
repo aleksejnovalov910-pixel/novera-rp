@@ -14,6 +14,11 @@ export const WorldEvents = {
   vehicleReleaseImpound: 'novera:vehicles:impound:release',
   propertyBuy: 'novera:properties:buy',
   propertyEnter: 'novera:properties:enter',
+  propertyInfo: 'novera:properties:info',
+  propertyShareAccess: 'novera:properties:access:share',
+  propertyRevokeAccess: 'novera:properties:access:revoke',
+  propertyRent: 'novera:properties:rent',
+  propertyContainers: 'novera:properties:containers',
   familyCreate: 'novera:families:create',
   marketCreate: 'novera:market:create',
   marketBuy: 'novera:market:buy',
@@ -22,6 +27,7 @@ export const WorldEvents = {
 
 export type JobKey = 'taxi' | 'courier' | 'trucker' | 'mechanic' | 'tow' | 'builder' | 'electrician' | 'garbage';
 export type VehicleServiceType = 'repair' | 'oil' | 'battery' | 'tires';
+export type PropertyAccessType = 'resident' | 'guest';
 export interface JobProgressView { jobKey: JobKey; level: number; experience: number; completedTasks: number; }
 export interface FamilyView { id: string; name: string; rank: number; level: number; treasury: number; }
 export interface FactionView { id: string; key: string; name: string; rank: number; type: string; }
