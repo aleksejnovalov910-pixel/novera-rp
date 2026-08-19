@@ -3,8 +3,10 @@ import { createDatabase } from '@novera/database';
 import { Logger } from '@novera/logging';
 import { AccountService } from './modules/accounts/account.service';
 import { CharacterService } from './modules/characters/character.service';
+import { GameplayService } from './modules/gameplay/gameplay.service';
 import { registerAuthEvents } from './runtime/auth.events';
 import { registerCharacterEvents } from './runtime/character.events';
+import { registerGameplayEvents } from './runtime/gameplay.events';
 import { createRateLimitStore } from './services/rate-limit';
 
 async function boot(): Promise<void> {
@@ -17,6 +19,8 @@ async function boot(): Promise<void> {
 
   const accounts = new AccountService(db);
   const characters = new CharacterService(db);
+  const gameplay = new GameplayService(db);
+
   registerAuthEvents({
     accounts,
     characters,
@@ -26,6 +30,7 @@ async function boot(): Promise<void> {
     lockSeconds: config.authLockSeconds
   });
   registerCharacterEvents({ characters, logger: logger.child('characters') });
+  registerGameplayEvents({ gameplay, logger: logger.child('gameplay') });
 
   mp.events.add('playerJoin', (player: PlayerMp) => {
     player.dimension = 1000 + player.id;
