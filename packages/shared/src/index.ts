@@ -7,3 +7,4 @@ export * from './events/characters';
 export * from './events/gameplay';
 export * from './events/world';
 export * from './events/extended';
+export * from './events/roleplay';

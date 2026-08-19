@@ -1,0 +1,9 @@
+import type { NoveraDatabase } from '@novera/database';
+import type { WantedView } from '@novera/shared';
+export class PoliceService{
+ constructor(private readonly db:NoveraDatabase){}
+ async wanted(characterId:bigint):Promise<WantedView[]>{const[rows]=await this.db.pool.query<any[]>('SELECT id,level,reason,created_at FROM wanted_records WHERE character_id=? AND active=TRUE ORDER BY created_at DESC',[characterId]);return rows.map(r=>({id:String(r.id),level:Number(r.level),reason:r.reason,createdAt:new Date(r.created_at).toISOString()}))}
+ async setWanted(targetId:bigint,issuerId:bigint,level:number,reason:string):Promise<bigint|null>{const text=reason.trim();if(!Number.isInteger(level)||level<1||level>5||text.length<3||text.length>255)return null;const[result]=await this.db.pool.execute<any>('INSERT INTO wanted_records(character_id,issuer_character_id,level,reason) VALUES(?,?,?,?)',[targetId,issuerId,level,text]);return BigInt(result.insertId)}
+ async createCase(leadId:bigint,title:string,description:string):Promise<bigint|null>{const t=title.trim(),d=description.trim();if(t.length<3||t.length>128||d.length<10||d.length>10000)return null;const[result]=await this.db.pool.execute<any>('INSERT INTO police_cases(title,description,lead_character_id) VALUES(?,?,?)',[t,d,leadId]);return BigInt(result.insertId)}
+ async addEvidence(collectorId:bigint,caseId:bigint|null,type:string,description:string,metadata:unknown):Promise<bigint|null>{const t=type.trim(),d=description.trim();if(!/^[a-z0-9_-]{2,48}$/i.test(t)||d.length<3||d.length>500)return null;const[result]=await this.db.pool.execute<any>('INSERT INTO evidence(case_id,collected_by_character_id,evidence_type,description,metadata) VALUES(?,?,?,?,?)',[caseId,collectorId,t,d,metadata==null?null:JSON.stringify(metadata)]);return BigInt(result.insertId)}
+}

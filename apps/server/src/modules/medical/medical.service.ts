@@ -1,0 +1,9 @@
+import type { NoveraDatabase } from '@novera/database';
+import type { InjuryView } from '@novera/shared';
+export class MedicalService{
+ constructor(private readonly db:NoveraDatabase){}
+ async injuries(characterId:bigint):Promise<InjuryView[]>{const[rows]=await this.db.pool.query<any[]>('SELECT id,injury_type,body_part,severity,treated,occurred_at FROM injuries WHERE character_id=? ORDER BY occurred_at DESC LIMIT 100',[characterId]);return rows.map(r=>({id:String(r.id),type:r.injury_type,bodyPart:r.body_part,severity:Number(r.severity),treated:Boolean(r.treated),occurredAt:new Date(r.occurred_at).toISOString()}))}
+ async addInjury(characterId:bigint,type:string,bodyPart:string,severity:number,metadata?:unknown):Promise<bigint|null>{if(!/^[a-z0-9_-]{2,48}$/i.test(type)||!/^[a-z0-9_-]{2,32}$/i.test(bodyPart)||!Number.isInteger(severity)||severity<1||severity>5)return null;const[result]=await this.db.pool.execute<any>('INSERT INTO injuries(character_id,injury_type,body_part,severity,metadata) VALUES(?,?,?,?,?)',[characterId,type,bodyPart,severity,metadata==null?null:JSON.stringify(metadata)]);return BigInt(result.insertId)}
+ async treat(injuryId:bigint):Promise<boolean>{const[result]=await this.db.pool.execute<any>('UPDATE injuries SET treated=TRUE,treated_at=NOW() WHERE id=? AND treated=FALSE',[injuryId]);return result.affectedRows===1}
+ async updateRecord(targetId:bigint,medicId:bigint,bloodType:string|null,allergies:string|null,notes:string|null):Promise<void>{await this.db.pool.execute('INSERT INTO medical_records(character_id,blood_type,allergies,notes,updated_by_character_id) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE blood_type=VALUES(blood_type),allergies=VALUES(allergies),notes=VALUES(notes),updated_by_character_id=VALUES(updated_by_character_id)',[targetId,bloodType,allergies?.slice(0,500)??null,notes?.slice(0,5000)??null,medicId])}
+}

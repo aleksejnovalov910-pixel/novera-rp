@@ -1,48 +1,35 @@
 # NOVERA RP
 
-NOVERA RP is a from-scratch GTA V Role Play project for RAGE:MP. The goal is a server-authoritative, modular platform designed for 500+ concurrent players with deep RP systems, a controlled economy and modern CEF UI.
+NOVERA RP is a from-scratch GTA V Role Play project for RAGE:MP, designed around server-authoritative systems, a modular TypeScript codebase, MySQL persistence and a unified CEF interface.
 
-## Status
+## Current milestone
 
-**v0.4.0 — Character Creator + GTA5HOST target**
+**v0.8.0 — Closed-alpha platform foundation**
 
-Implemented so far:
+Implemented/integrated in source:
 
-- pnpm monorepo split into server, client, CEF and shared packages;
-- RAGE:MP TypeScript server/client bootstrap;
-- validated environment configuration;
-- structured JSON logging;
-- MySQL connection pool + Drizzle ORM schema;
-- versioned SQL migrations;
-- optional Redis with shared-hosting in-memory rate-limit fallback;
-- Argon2id password hashing;
-- account registration/login service;
-- three server-authoritative character slots per account;
-- character create/select/soft-delete flow;
-- birth date, gender and GTA heritage/appearance persistence;
-- private creator dimensions;
-- live GTA freemode appearance preview;
-- mother/father blend, hair, colors, eyebrows, beard and eyes;
-- scripted creator camera with LMB rotation and mouse-wheel zoom;
-- cohesive CEF auth/slots/creator interface;
-- GTA5HOST RAGE:MP 1.1 old deployment target and config template;
-- ownership validation and stored spawn restoration;
-- server-authoritative shared event contracts.
+- account registration/login with built-in `crypto.scrypt` password hashing;
+- three character slots and GTA freemode character creator;
+- persistent character position and gameplay bootstrap;
+- cash/bank transactions and audit-friendly money history;
+- inventory persistence and transactional slot moves;
+- owned vehicles, VIN/plates, spawn/storage foundation;
+- properties, ownership, purchase and private dimensions;
+- eight career foundations with progression/rewards;
+- factions, families and business ownership/employees;
+- V-Market transaction foundation with fees;
+- phone contacts/messages persistence;
+- licenses, fines and government data;
+- police wanted records, cases and evidence;
+- EMS medical records/injuries/treatment foundation;
+- quests and achievements persistence;
+- reports/punishments and admin-level account support;
+- event rate guards and server-side permission checks;
+- HUD plus phone/tablet/inventory/settings CEF shell;
+- GTA5HOST-oriented bundled runtime builder for RAGE:MP 1.1 old / 500 slots.
 
-## Local infrastructure
+## Important status
 
-```bash
-cp .env.example .env
-docker compose -f infra/docker-compose.yml up -d
-corepack enable
-pnpm install
-pnpm db:migrate
-pnpm typecheck
-pnpm build
-```
+This is **IMPLEMENTED + INTEGRATED SOURCE**, not yet `TESTED` or `PRODUCTION READY`. Per the project plan, the host is intentionally untouched until the feature/content pass and local build validation are complete. The first host upload will be a single assembled runtime, after which real RAGE:MP compatibility errors will be fixed against console logs.
 
-Redis is optional. On a shared host without Redis, NOVERA falls back to an in-memory authentication rate-limit store. Durable state remains in MySQL.
-
-The next milestone is the production build/packaging pipeline that assembles `packages/novera`, `client_packages/novera` and CEF assets into an FTP-ready runtime ZIP.
-
-See `docs/ARCHITECTURE.md`, `docs/CHARACTERS.md`, `docs/CHARACTER_CREATOR.md`, `docs/ROADMAP.md` and `deploy/gta5host/README.md`.
+See `docs/` for architecture, character creator, gameplay platform, extended systems, roleplay systems and deployment notes.

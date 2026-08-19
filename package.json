@@ -1,6 +1,6 @@
 {
   "name": "novera-rp",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "NOVERA RP — next-generation GTA V Role Play server for RAGE:MP",
   "packageManager": "pnpm@10.15.0",
@@ -13,8 +13,6 @@
     "runtime:build": "pnpm typecheck && node scripts/build-runtime.mjs",
     "runtime:validate": "node scripts/validate-runtime.mjs"
   },
-  "devDependencies": {
-    "esbuild": "^0.25.9"
-  },
+  "devDependencies": { "esbuild": "^0.25.9" },
   "engines": { "node": ">=18.0.0" }
 }
