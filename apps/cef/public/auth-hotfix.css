@@ -1,10 +1,17 @@
-/* NOVERA v0.15.1 auth rendering hotfix */
+/* NOVERA v0.15.2 GTA5HOST CEF rendering hotfix */
 html,body,.shell{background:transparent!important}
-.auth-scene{background:transparent!important;pointer-events:auto}
-.auth-scene::before{background:linear-gradient(90deg,rgba(4,7,13,.78) 0%,rgba(4,7,13,.48) 34%,rgba(4,7,13,.14) 58%,rgba(4,7,13,.08) 100%),linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.28))!important}
-.auth-vignette{box-shadow:inset 0 0 130px rgba(0,0,0,.35)!important}
-.auth-card{background:linear-gradient(180deg,rgba(12,17,28,.88),rgba(8,12,20,.9))!important}
-.auth-card.auth-busy{pointer-events:none;opacity:.82}
-.auth-primary[disabled]{cursor:wait;transform:none!important;opacity:.75}
+.auth-scene{background:transparent!important;pointer-events:auto;isolation:isolate}
+.auth-scene::before{background:linear-gradient(90deg,rgba(4,7,13,.74) 0%,rgba(4,7,13,.42) 34%,rgba(4,7,13,.10) 60%,rgba(4,7,13,.03) 100%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.20))!important}
+.auth-vignette{box-shadow:inset 0 0 110px rgba(0,0,0,.28)!important}
+/* Old Chromium used by GTA5HOST/RAGE can render backdrop-filter as a huge opaque black rectangle. */
+.auth-card,.server-meta{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.auth-card{background:rgba(10,15,24,.94)!important;box-shadow:0 24px 70px rgba(0,0,0,.34)!important}
+.auth-card::after{display:none!important}
+/* Server status must be text/chips only, never a second black panel. */
+.server-meta{background:transparent!important;border:0!important;border-radius:0!important;padding:6px 0!important;box-shadow:none!important}
+.auth-card.auth-busy{pointer-events:none;opacity:.86}
+.auth-primary[disabled]{cursor:wait;transform:none!important;opacity:.78}
+/* Only player-facing validation/server errors are shown here. No CEF/debug wording. */
 .auth-debug{margin-top:10px;text-align:center;font-size:10px;line-height:1.45;color:#8290a8;min-height:15px}
+.auth-debug:empty{display:none}
 .auth-debug.error{color:#ff9b9b}.auth-debug.ok{color:#8cf0ab}

@@ -4,16 +4,16 @@
   const authCard = $('auth');
   if (!submit || !authCard) return;
 
-  const debug = document.createElement('div');
-  debug.id = 'authDebug';
-  debug.className = 'auth-debug';
-  authCard.appendChild(debug);
+  const message = document.createElement('div');
+  message.id = 'authDebug';
+  message.className = 'auth-debug';
+  authCard.appendChild(message);
 
   let pending = false;
   let timeout = 0;
-  const setDebug = (text, type = '') => {
-    debug.textContent = text || '';
-    debug.className = `auth-debug ${type}`.trim();
+  const setMessage = (text, type = '') => {
+    message.textContent = text || '';
+    message.className = `auth-debug ${type}`.trim();
   };
   const finishPending = () => {
     pending = false;
@@ -23,19 +23,17 @@
     submit.textContent = $('tabRegister')?.classList.contains('active') ? 'Начать историю' : 'Войти в NOVERA';
   };
 
-  window.noveraAuthBridgeAck = (mode) => {
-    if (!pending) return;
-    setDebug(mode === 'register' ? 'CEF подключён. Создаём аккаунт на сервере…' : 'CEF подключён. Проверяем аккаунт на сервере…');
-  };
+  // Internal bridge acknowledgement is intentionally invisible to players.
+  window.noveraAuthBridgeAck = () => {};
 
   const originalAuthResult = window.noveraAuthResult;
   window.noveraAuthResult = (raw) => {
     finishPending();
     try {
       const result = JSON.parse(raw);
-      setDebug(result.message || (result.ok ? 'Готово.' : 'Ошибка.'), result.ok ? 'ok' : 'error');
+      setMessage(result.ok ? '' : (result.message || 'Не удалось выполнить запрос.'), result.ok ? 'ok' : 'error');
     } catch {
-      setDebug('Получен некорректный ответ сервера.', 'error');
+      setMessage('Не удалось обработать ответ сервера. Повтори попытку.', 'error');
     }
     if (typeof originalAuthResult === 'function') originalAuthResult(raw);
   };
@@ -48,15 +46,15 @@
     const registering = $('tabRegister')?.classList.contains('active');
 
     if (!/^[a-zA-Z0-9_.-]{3,32}$/.test(login)) {
-      setDebug('Логин: 3–32 символа, латиница, цифры, ., _, -.', 'error');
+      setMessage('Логин: 3–32 символа, латиница, цифры, ., _, -.', 'error');
       return;
     }
     if (password.length < 8 || password.length > 128) {
-      setDebug('Пароль должен содержать минимум 8 символов.', 'error');
+      setMessage('Пароль должен содержать минимум 8 символов.', 'error');
       return;
     }
     if (registering && confirm !== password) {
-      setDebug('Пароли не совпадают.', 'error');
+      setMessage('Пароли не совпадают.', 'error');
       return;
     }
 
@@ -64,21 +62,21 @@
     authCard.classList.add('auth-busy');
     submit.disabled = true;
     submit.textContent = registering ? 'Создаём аккаунт…' : 'Входим…';
-    setDebug('Отправляем данные в RAGE:MP…');
+    setMessage('');
 
     try {
-      if (!window.mp || typeof window.mp.trigger !== 'function') throw new Error('RAGE CEF bridge unavailable');
+      if (!window.mp || typeof window.mp.trigger !== 'function') throw new Error('bridge unavailable');
       window.mp.trigger(registering ? 'novera:cef:register' : 'novera:cef:login', login, password);
-    } catch (error) {
+    } catch {
       finishPending();
-      setDebug(`CEF bridge error: ${String(error)}`, 'error');
+      setMessage('Не удалось отправить запрос. Повтори попытку.', 'error');
       return;
     }
 
     timeout = window.setTimeout(() => {
       if (!pending) return;
       finishPending();
-      setDebug('Сервер не ответил за 10 секунд. Проверь консоль GTA5HOST.', 'error');
+      setMessage('Сервер временно не отвечает. Повтори попытку.', 'error');
     }, 10000);
   };
 
