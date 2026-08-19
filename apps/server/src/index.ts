@@ -4,6 +4,7 @@ import { Logger } from '@novera/logging';
 import { AccountService } from './modules/accounts/account.service';
 import { CharacterService } from './modules/characters/character.service';
 import { registerAuthEvents } from './runtime/auth.events';
+import { registerCharacterEvents } from './runtime/character.events';
 import { createRedis } from './services/redis';
 
 async function boot(): Promise<void> {
@@ -17,6 +18,7 @@ async function boot(): Promise<void> {
   const accounts = new AccountService(db);
   const characters = new CharacterService(db);
   registerAuthEvents({ accounts, characters, redis, logger: logger.child('auth'), maxAttempts: config.authMaxAttempts, lockSeconds: config.authLockSeconds });
+  registerCharacterEvents({ characters, logger: logger.child('characters') });
 
   mp.events.add('playerJoin', (player: PlayerMp) => {
     player.dimension = 1000 + player.id;
