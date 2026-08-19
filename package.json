@@ -1,6 +1,6 @@
 {
   "name": "novera-rp",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "description": "NOVERA RP — next-generation GTA V Role Play server for RAGE:MP",
   "packageManager": "pnpm@10.15.0",
