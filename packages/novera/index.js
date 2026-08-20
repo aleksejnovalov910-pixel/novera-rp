@@ -8,5 +8,6 @@ load('./vehicles.js');
 load('./properties.js');
 load('./organizations.js');
 load('./market.js');
+load('./tutorial.js');
 load('./commands.js');
 console.log('[NOVERA] core loaded');
