@@ -100,7 +100,7 @@ mp.events.add(CharacterEvents.selected,(p:string)=>{
   execute('window.noveraCharacterSelected',p);mp.gui.cursor.show(false,false);mp.events.callRemote(GameplayEvents.bootstrap);mp.events.callRemote(WorldEvents.request)
 });
 mp.events.add(GameplayEvents.state,(p:string)=>execute('window.noveraGameplayState',p));
-mp.events.add(WorldEvents.result,(p:string)=>execute('window.noveraWorldState',p));
+mp.events.add(WorldEvents.result,(p:string)=>{execute('window.noveraWorldState',p);try{const result=JSON.parse(p) as {reward?:unknown};if(result.reward)mp.events.callRemote(GameplayEvents.bootstrap)}catch{}});
 mp.events.add(PhoneEvents.state,(p:string)=>execute('window.noveraPhoneState',p));
 mp.events.add(PhoneEvents.conversation,(p:string)=>execute('window.noveraPhoneConversation',p));
 
@@ -121,6 +121,8 @@ mp.events.add('novera:cef:inventory:move',(from:number,to:number)=>mp.events.cal
 mp.events.add('novera:cef:inventory:split',(from:number,to:number,amount:number)=>mp.events.callRemote(GameplayEvents.inventorySplit,Number(from),Number(to),Number(amount)));
 mp.events.add('novera:cef:inventory:use',(slot:number)=>mp.events.callRemote(GameplayEvents.inventoryUse,Number(slot)));
 mp.events.add('novera:cef:vehicle:spawn',(id:string)=>mp.events.callRemote(WorldEvents.vehicleSpawn,id));
+mp.events.add('novera:cef:job:start',(jobKey:string)=>mp.events.callRemote(WorldEvents.jobStart,String(jobKey)));
+mp.events.add('novera:cef:job:finish',(jobKey:string,token:string)=>mp.events.callRemote(WorldEvents.jobFinish,String(jobKey),String(token)));
 mp.events.add('novera:cef:phone:state',()=>mp.events.callRemote(PhoneEvents.state));
 mp.events.add('novera:cef:phone:add-contact',(id:string,alias:string)=>mp.events.callRemote(PhoneEvents.addContact,String(id),String(alias)));
 mp.events.add('novera:cef:phone:conversation',(id:string)=>mp.events.callRemote(PhoneEvents.conversation,String(id)));
