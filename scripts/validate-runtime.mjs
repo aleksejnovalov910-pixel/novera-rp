@@ -34,7 +34,9 @@ const cefApp = await readFile(resolve(runtime,'client_packages/novera/cef/app.js
 for (const bridge of ['novera:cef:character:create','novera:cef:job:start','novera:cef:job:finish','novera:cef:vehicle:spawn']) {
   if (!cefApp.includes(bridge)) throw new Error(`CEF playable bridge missing: ${bridge}`);
 }
-if (!cefApp.includes("$('age').value") || !/\bage\s*:/.test(cefApp)) throw new Error('CEF character create payload does not include age');
+const readsAgeInput = cefApp.includes("$('age').value") || cefApp.includes('$("age").value');
+const includesAgeInPayload = /\bage\s*:/.test(cefApp) || /\bage\s*[,}]/.test(cefApp);
+if (!readsAgeInput || !includesAgeInPayload) throw new Error('CEF character create payload does not include age');
 
 const clientRuntime = await readFile(resolve(runtime,'client_packages/novera/client/index.js'),'utf8');
 for (const bridge of ['novera:cef:character:create','novera:cef:job:start','novera:cef:job:finish','novera:cef:vehicle:spawn']) {
