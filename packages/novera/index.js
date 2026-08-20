@@ -11,4 +11,5 @@ load('./market.js');
 load('./tutorial.js');
 load('./admin.js');
 load('./commands.js');
+load('./healthcheck.js');
 console.log('[NOVERA] core loaded');
