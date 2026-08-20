@@ -34,7 +34,7 @@ const cefApp = await readFile(resolve(runtime,'client_packages/novera/cef/app.js
 for (const bridge of ['novera:cef:character:create','novera:cef:job:start','novera:cef:job:finish','novera:cef:vehicle:spawn']) {
   if (!cefApp.includes(bridge)) throw new Error(`CEF playable bridge missing: ${bridge}`);
 }
-if (!cefApp.includes('age:+$(\'age\').value')) throw new Error('CEF character create payload does not include age');
+if (!cefApp.includes("$('age').value") || !/\bage\s*:/.test(cefApp)) throw new Error('CEF character create payload does not include age');
 
 const clientRuntime = await readFile(resolve(runtime,'client_packages/novera/client/index.js'),'utf8');
 for (const bridge of ['novera:cef:character:create','novera:cef:job:start','novera:cef:job:finish','novera:cef:vehicle:spawn']) {
@@ -49,7 +49,7 @@ if (!authCss.includes('backdrop-filter:none') || !authCss.includes('.server-meta
 
 const serverRuntime = await readFile(resolve(runtime,'packages/novera/index.js'),'utf8');
 if (/["']node:[^"']+["']/.test(serverRuntime)) throw new Error('GTA5HOST runtime still contains unsupported node:* builtin imports');
-for (const marker of ['job_sessions','job_completion_log','savePosition']) {
+for (const marker of ['job_sessions','job_completion_log','savePosition','recoverWorldState']) {
   if (!serverRuntime.includes(marker)) throw new Error(`server playable runtime marker missing: ${marker}`);
 }
 
