@@ -30,7 +30,7 @@ export interface CreateCharacterInput {
   slot: 1 | 2 | 3;
   firstName: string;
   lastName: string;
-  birthDate: string;
+  age: number;
   gender: Gender;
   appearance: CharacterAppearance;
 }
@@ -46,7 +46,7 @@ export interface CharacterSummary {
   firstName: string;
   lastName: string;
   gender: Gender;
-  birthDate: string;
+  age: number;
   level: number;
   lastPlayedAt: string | null;
 }
