@@ -1,9 +1,12 @@
 name: NOVERA CI
+
 on:
   push:
-    branches: [main]
+    branches: [main, playable-v0.18]
   pull_request:
-    branches: [main]
+    branches: [main, playable-v0.18]
+  workflow_dispatch:
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -12,15 +15,22 @@ jobs:
       - uses: actions/checkout@v4
       - run: corepack enable
       - uses: pnpm/action-setup@v4
-        with: { version: 10.15.0 }
+        with:
+          version: 10.15.0
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20
+          cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm typecheck
       - run: node scripts/build-runtime.mjs
       - run: node scripts/validate-runtime.mjs
+      - run: |
+          cd runtime
+          zip -r ../NOVERA-RP-v0.18.0-alpha.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: novera-gta5host-runtime
-          path: runtime/
+          name: NOVERA-RP-v0.18.0-alpha
+          path: NOVERA-RP-v0.18.0-alpha.zip
           if-no-files-found: error
+          retention-days: 30
