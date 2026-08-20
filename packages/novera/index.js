@@ -9,5 +9,6 @@ load('./properties.js');
 load('./organizations.js');
 load('./market.js');
 load('./tutorial.js');
+load('./admin.js');
 load('./commands.js');
 console.log('[NOVERA] core loaded');
