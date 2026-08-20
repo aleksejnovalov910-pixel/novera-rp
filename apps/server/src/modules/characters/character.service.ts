@@ -142,7 +142,10 @@ export class CharacterService {
   async softDelete(accountId: bigint, characterId: bigint): Promise<boolean> {
     const row = await this.getOwned(accountId, characterId);
     if (!row) return false;
-    await this.db.orm.update(characters).set({ deletedAt: new Date() }).where(eq(characters.id, row.id));
+    // The database has unique keys on (account_id, slot) and on the RP name.
+    // Keeping a tombstone would permanently block slot/name reuse, so removal is
+    // physical here. Dependent gameplay rows use ON DELETE CASCADE/SET NULL.
+    await this.db.orm.delete(characters).where(eq(characters.id, row.id));
     return true;
   }
 }
