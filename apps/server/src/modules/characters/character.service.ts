@@ -16,6 +16,31 @@ const DEFAULT_APPEARANCE: CharacterAppearance = {
   eyeColor: 0
 };
 
+function ageFromBirthDate(birthDate: string): number {
+  const born = new Date(`${birthDate}T00:00:00Z`);
+  if (Number.isNaN(born.valueOf())) return 18;
+  const now = new Date();
+  let age = now.getUTCFullYear() - born.getUTCFullYear();
+  const beforeBirthday = now.getUTCMonth() < born.getUTCMonth()
+    || (now.getUTCMonth() === born.getUTCMonth() && now.getUTCDate() < born.getUTCDate());
+  if (beforeBirthday) age -= 1;
+  return Math.max(18, Math.min(90, age));
+}
+
+function birthDateFromAge(age: number): string {
+  const safeAge = Math.max(18, Math.min(90, Math.trunc(age)));
+  const year = new Date().getUTCFullYear() - safeAge;
+  return `${year}-01-01`;
+}
+
+export interface CharacterPositionSnapshot {
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  dimension: number;
+}
+
 export class CharacterService {
   constructor(private readonly db: NoveraDatabase) {}
 
@@ -26,7 +51,7 @@ export class CharacterService {
       firstName: row.firstName,
       lastName: row.lastName,
       gender: row.gender as Gender,
-      birthDate: row.birthDate,
+      age: ageFromBirthDate(row.birthDate),
       level: row.level,
       lastPlayedAt: row.lastPlayedAt?.toISOString() ?? null
     };
@@ -42,24 +67,20 @@ export class CharacterService {
     if (![1, 2, 3].includes(input.slot)) return false;
     if (!NAME.test(input.firstName) || !NAME.test(input.lastName)) return false;
     if (input.gender !== 'male' && input.gender !== 'female') return false;
-
-    const born = new Date(`${input.birthDate}T00:00:00Z`);
-    if (Number.isNaN(born.valueOf())) return false;
-    const age = Math.floor((Date.now() - born.valueOf()) / 31557600000);
-    if (age < 18 || age > 90) return false;
+    if (!Number.isInteger(input.age) || input.age < 18 || input.age > 90) return false;
 
     const a = input.appearance ?? DEFAULT_APPEARANCE;
-    return a.mother >= 0 && a.mother <= 45
-      && a.father >= 0 && a.father <= 44
-      && a.resemblance >= 0 && a.resemblance <= 1
-      && a.skinMix >= 0 && a.skinMix <= 1
-      && a.hair >= 0 && a.hair <= 255
-      && a.hairColor >= 0 && a.hairColor <= 63
-      && a.eyebrow >= 0 && a.eyebrow <= 33
-      && a.eyebrowColor >= 0 && a.eyebrowColor <= 63
-      && a.beard >= 0 && a.beard <= 255
-      && a.beardColor >= 0 && a.beardColor <= 63
-      && a.eyeColor >= 0 && a.eyeColor <= 31;
+    return Number.isInteger(a.mother) && a.mother >= 0 && a.mother <= 45
+      && Number.isInteger(a.father) && a.father >= 0 && a.father <= 44
+      && Number.isFinite(a.resemblance) && a.resemblance >= 0 && a.resemblance <= 1
+      && Number.isFinite(a.skinMix) && a.skinMix >= 0 && a.skinMix <= 1
+      && Number.isInteger(a.hair) && a.hair >= 0 && a.hair <= 255
+      && Number.isInteger(a.hairColor) && a.hairColor >= 0 && a.hairColor <= 63
+      && Number.isInteger(a.eyebrow) && a.eyebrow >= 0 && a.eyebrow <= 33
+      && Number.isInteger(a.eyebrowColor) && a.eyebrowColor >= 0 && a.eyebrowColor <= 63
+      && Number.isInteger(a.beard) && a.beard >= 0 && a.beard <= 255
+      && Number.isInteger(a.beardColor) && a.beardColor >= 0 && a.beardColor <= 63
+      && Number.isInteger(a.eyeColor) && a.eyeColor >= 0 && a.eyeColor <= 31;
   }
 
   async create(accountId: bigint, input: CreateCharacterInput): Promise<CharacterSummary | 'SLOT_OCCUPIED' | 'NAME_TAKEN'> {
@@ -77,7 +98,7 @@ export class CharacterService {
       firstName: input.firstName,
       lastName: input.lastName,
       gender: input.gender,
-      birthDate: input.birthDate,
+      birthDate: birthDateFromAge(input.age),
       appearance: input.appearance ?? DEFAULT_APPEARANCE
     });
 
@@ -104,10 +125,27 @@ export class CharacterService {
     return row;
   }
 
+  async savePosition(characterId: bigint, snapshot: CharacterPositionSnapshot): Promise<void> {
+    if (![snapshot.x, snapshot.y, snapshot.z, snapshot.heading, snapshot.dimension].every(Number.isFinite)) {
+      throw new Error('Cannot persist non-finite character position');
+    }
+    await this.db.orm.update(characters).set({
+      posX: snapshot.x,
+      posY: snapshot.y,
+      posZ: snapshot.z,
+      heading: snapshot.heading,
+      dimension: Math.max(0, Math.trunc(snapshot.dimension)),
+      lastPlayedAt: new Date()
+    }).where(and(eq(characters.id, characterId), isNull(characters.deletedAt)));
+  }
+
   async softDelete(accountId: bigint, characterId: bigint): Promise<boolean> {
     const row = await this.getOwned(accountId, characterId);
     if (!row) return false;
-    await this.db.orm.update(characters).set({ deletedAt: new Date() }).where(eq(characters.id, row.id));
+    // The database has unique keys on (account_id, slot) and on the RP name.
+    // Keeping a tombstone would permanently block slot/name reuse, so removal is
+    // physical here. Dependent gameplay rows use ON DELETE CASCADE/SET NULL.
+    await this.db.orm.delete(characters).where(eq(characters.id, row.id));
     return true;
   }
 }

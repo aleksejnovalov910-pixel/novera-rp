@@ -6,6 +6,8 @@
   let authMode = 'login', creatorSlot = 1, gender = 'male', dragging = false, lastX = 0;
   let game = { money: { cash: 0, bank: 0, bankAccount: '' }, inventory: [], vehicles: [], properties: [] };
   let world = { jobs: [], family: null, faction: null };
+  let activeJob = null;
+  const jobLabels = { taxi:'Такси',courier:'Курьер',trucker:'Дальнобойщик',mechanic:'Механик',tow:'Эвакуатор',builder:'Строитель',electrician:'Электрик',garbage:'Мусоровоз' };
 
   const trigger = (name, ...args) => { if (window.mp && typeof window.mp.trigger === 'function') window.mp.trigger(name, ...args); };
   const money = (v) => `$${Number(v || 0).toLocaleString('ru-RU')}`;
@@ -49,7 +51,11 @@
 
   document.querySelectorAll('[data-gender]').forEach((button) => button.onclick = () => { gender=button.dataset.gender; document.querySelectorAll('[data-gender]').forEach((b)=>b.classList.toggle('active',b===button)); const f=gender==='female'; $('beardLabel').style.display=f?'none':''; $('beardColorLabel').style.display=f?'none':''; preview(); });
   ['mother','father','resemblance','skinMix','hair','hairColor','eyebrow','eyebrowColor','beard','beardColor','eyeColor'].forEach((id)=>$(id).addEventListener('input',preview));
-  $('createCharacter').onclick = () => trigger('novera:cef:character:create', JSON.stringify({ slot:creatorSlot, firstName:$('firstName').value.trim(), lastName:$('lastName').value.trim(), birthDate:$('birthDate').value, gender, appearance:appearance() }));
+  $('createCharacter').onclick = () => {
+    const age = Number($('age').value);
+    if (!Number.isInteger(age) || age < 18 || age > 90) return toast('Возраст должен быть от 18 до 90 лет.');
+    trigger('novera:cef:character:create', JSON.stringify({ slot:creatorSlot, firstName:$('firstName').value.trim(), lastName:$('lastName').value.trim(), age, gender, appearance:appearance() }));
+  };
   stage.onmousedown=(e)=>{if(e.button===0){dragging=true;lastX=e.clientX;stage.classList.add('dragging')}}; window.onmouseup=()=>{dragging=false;stage.classList.remove('dragging')}; window.onmousemove=(e)=>{if(dragging){const d=(e.clientX-lastX)*.22;lastX=e.clientX;trigger('novera:cef:creator:rotate',d)}}; stage.addEventListener('wheel',(e)=>{e.preventDefault();trigger('novera:cef:creator:zoom',e.deltaY>0?.18:-.18)},{passive:false});
 
   function refreshHud(){ $('hudCash').textContent=money(game.money.cash); $('hudBank').textContent=money(game.money.bank); }
@@ -57,7 +63,7 @@
   function openDevice(name){
     overlay.classList.remove('hidden'); deviceContent.innerHTML=''; deviceHome.innerHTML='';
     if(name==='phone'){ deviceEyebrow.textContent='NOVERA OS'; deviceTitle.textContent='Телефон'; deviceHome.innerHTML=card('Банк',money(game.money.bank),'bank')+card('V-Market','Объявления','market')+card('Транспорт',`${game.vehicles.length} авто`,'vehicles')+card('Недвижимость',`${game.properties.length} объектов`,'properties')+card('Контакты','Связь с игроками','contacts')+card('Такси','Вызвать машину','taxi'); }
-    if(name==='tablet'){ deviceEyebrow.textContent='NOVERA TABLET'; deviceTitle.textContent='Планшет'; deviceHome.innerHTML=card('Работы',`${world.jobs.length} профессий`,'jobs')+card('Семья',world.family?.name||'Нет семьи','family')+card('Организация',world.faction?.name||'Нет организации','faction')+card('V-Market','Экономика города','market')+card('Недвижимость','Управление имуществом','properties')+card('Автопарк','Гаражи и транспорт','vehicles'); }
+    if(name==='tablet'){ deviceEyebrow.textContent='NOVERA TABLET'; deviceTitle.textContent='Планшет'; deviceHome.innerHTML=card('Работы',activeJob?`Активно: ${jobLabels[activeJob.jobKey]||activeJob.jobKey}`:`${world.jobs.length} профессий`,'jobs')+card('Семья',world.family?.name||'Нет семьи','family')+card('Организация',world.faction?.name||'Нет организации','faction')+card('V-Market','Экономика города','market')+card('Недвижимость','Управление имуществом','properties')+card('Автопарк','Гаражи и транспорт','vehicles'); }
     if(name==='inventory'){ deviceEyebrow.textContent='CHARACTER'; deviceTitle.textContent='Инвентарь'; renderInventory(); }
     if(name==='settings'){ deviceEyebrow.textContent='NOVERA'; deviceTitle.textContent='Настройки'; deviceContent.innerHTML='<div class="content-card"><h3>Управление</h3><p>F2 — настройки · ↑ — телефон · ↓ — планшет · I — инвентарь</p><p>Перебинды, звук, HUD и графические параметры будут расширяться модулем настроек.</p></div>'; }
     bindApps();
@@ -70,12 +76,18 @@
       el.oncontextmenu=(e)=>{e.preventDefault();const item=items.find(x=>String(x.id)===String(el.dataset.item));if(!item||+item.amount<2)return;const amount=Number(prompt(`Сколько отделить? Доступно: ${item.amount}`,Math.floor(+item.amount/2)));if(!Number.isInteger(amount)||amount<=0||amount>=+item.amount)return;const free=Array.from({length:30},(_,s)=>s).find(s=>!items.some(x=>+x.slot===s));if(free===undefined)return toast('Нет свободного слота');trigger('novera:cef:inventory:split',+el.dataset.slot,free,amount)};
     });
   }
+  function renderJobs(){
+    const keys=Object.keys(jobLabels);
+    if(activeJob){deviceContent.innerHTML=`<div class="content-card"><h3>${jobLabels[activeJob.jobKey]||activeJob.jobKey}</h3><p>Задание: <b>${activeJob.taskKey}</b></p><p>Минимальная длительность задания — 10 секунд. После выполнения забери оплату на банковский счёт.</p><button id="finishJob" class="primary">Завершить задание</button></div>`;$('finishJob').onclick=()=>trigger('novera:cef:job:finish',activeJob.jobKey,activeJob.token);return;}
+    deviceContent.innerHTML=`<div class="content-card"><h3>Карьера</h3><p>Выбери стартовую работу. Прогресс, выплаты и уровень сохраняются в базе данных.</p></div>${keys.map(key=>{const p=(world.jobs||[]).find(j=>j.jobKey===key);return `<div class="list-row"><div><b>${jobLabels[key]}</b><span>Уровень ${p?.level||1} · выполнено ${p?.completedTasks||0}</span></div><button data-job-start="${key}">Начать</button></div>`}).join('')}`;
+    deviceContent.querySelectorAll('[data-job-start]').forEach(b=>b.onclick=()=>trigger('novera:cef:job:start',b.dataset.jobStart));
+  }
   function renderApp(app){
     deviceHome.innerHTML='';
     if(app==='bank') deviceContent.innerHTML=`<div class="content-card"><h3>Счёт NOVERA Bank</h3><div class="big-number">${money(game.money.bank)}</div><p>Наличные: ${money(game.money.cash)}</p><p>Номер счёта: <b>${game.money.bankAccount||'создаётся...'}</b></p><div class="row"><button data-bank="deposit">Внести $1000</button><button data-bank="withdraw">Снять $1000</button></div><h3>Перевод</h3><div class="grid2"><input id="bankTarget" placeholder="NR0000000001" maxlength="12"><input id="bankAmount" type="number" min="1" step="1" placeholder="Сумма"></div><button id="bankTransfer" class="primary">Перевести</button></div>`;
     else if(app==='vehicles') deviceContent.innerHTML=(game.vehicles.length?game.vehicles.map(v=>`<div class="list-row"><div><b>${v.model}</b><span>${v.plate} · ${Math.round(v.fuel)}% топлива</span></div><button data-spawn="${v.id}">${v.stored?'Вызвать':'В мире'}</button></div>`).join(''):'<div class="empty-state">У тебя пока нет транспорта</div>');
     else if(app==='properties') deviceContent.innerHTML=(game.properties.length?game.properties.map(p=>`<div class="list-row"><div><b>${p.name}</b><span>${p.type}</span></div></div>`).join(''):'<div class="empty-state">Недвижимость ещё не приобретена</div>');
-    else if(app==='jobs') deviceContent.innerHTML=`<div class="content-card"><h3>Карьера</h3><p>Такси · Курьер · Дальнобойщик · Механик · Эвакуатор · Строитель · Электрик · Мусоровоз</p></div>`;
+    else if(app==='jobs'){renderJobs();return;}
     else if(app==='family') deviceContent.innerHTML=`<div class="content-card"><h3>${world.family?.name||'Семья'}</h3><p>${world.family?`Уровень ${world.family.level} · казна ${money(world.family.treasury)}`:'Создай семью или получи приглашение.'}</p></div>`;
     else if(app==='faction') deviceContent.innerHTML=`<div class="content-card"><h3>${world.faction?.name||'Организация'}</h3><p>${world.faction?`Ранг ${world.faction.rank}`:'Ты пока не состоишь в организации.'}</p></div>`;
     else if(app==='market') deviceContent.innerHTML='<div class="content-card"><h3>V-Market</h3><p>Единая площадка транспорта, недвижимости, предметов и услуг. Сделки выполняются сервером транзакционно.</p></div>';
@@ -88,12 +100,12 @@
   $('closeDevice').onclick=()=>{overlay.classList.add('hidden');trigger('novera:cef:device:close')};
 
   window.noveraAuthResult=(raw)=>{const r=JSON.parse(raw);toast(r.message);if(r.ok)show('slots')};
-  window.noveraCharacters=(raw)=>{const list=JSON.parse(raw);show('slots');slotGrid.innerHTML='';for(let slot=1;slot<=3;slot++){const c=list.find(x=>+x.slot===slot),el=document.createElement('div');el.className=`slot ${c?'':'empty'}`;el.innerHTML=c?`<div><h3>${c.firstName} ${c.lastName}</h3><p>Уровень ${c.level} · ${c.gender==='female'?'Женщина':'Мужчина'}</p></div><div class="slot-actions"><button data-select="${c.id}">Играть</button><button data-delete="${c.id}">Удалить</button></div>`:`<div><h3>Слот ${slot}</h3><p>Свободный персонаж</p></div><div class="slot-actions"><button data-create="${slot}">Создать</button></div>`;slotGrid.appendChild(el)}slotGrid.querySelectorAll('[data-create]').forEach(b=>b.onclick=()=>trigger('novera:cef:creator:open',+b.dataset.create));slotGrid.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>trigger('novera:cef:character:select',b.dataset.select));slotGrid.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('Удалить персонажа?'))trigger('novera:cef:character:delete',b.dataset.delete)})};
+  window.noveraCharacters=(raw)=>{const list=JSON.parse(raw);show('slots');slotGrid.innerHTML='';for(let slot=1;slot<=3;slot++){const c=list.find(x=>+x.slot===slot),el=document.createElement('div');el.className=`slot ${c?'':'empty'}`;el.innerHTML=c?`<div><h3>${c.firstName} ${c.lastName}</h3><p>${c.age} лет · Уровень ${c.level} · ${c.gender==='female'?'Женщина':'Мужчина'}</p></div><div class="slot-actions"><button data-select="${c.id}">Играть</button><button data-delete="${c.id}">Удалить</button></div>`:`<div><h3>Слот ${slot}</h3><p>Свободный персонаж</p></div><div class="slot-actions"><button data-create="${slot}">Создать</button></div>`;slotGrid.appendChild(el)}slotGrid.querySelectorAll('[data-create]').forEach(b=>b.onclick=()=>trigger('novera:cef:creator:open',+b.dataset.create));slotGrid.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>trigger('novera:cef:character:select',b.dataset.select));slotGrid.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('Удалить персонажа?'))trigger('novera:cef:character:delete',b.dataset.delete)})};
   window.noveraOpenCreator=(slot)=>{creatorSlot=+slot;$('creatorSlotLabel').textContent=`Слот ${creatorSlot}`;show('creator');setTimeout(preview,150)};
   window.noveraCharacterResult=(raw)=>toast(JSON.parse(raw).message);
   window.noveraCharacterSelected=()=>{show('gameplay');overlay.classList.add('hidden')};
   window.noveraGameplayState=(raw)=>{const r=JSON.parse(raw);if(!r.ok){toast(r.message||'Ошибка');return}if(r.payload&&r.payload.money){game=r.payload;refreshHud()}else if(r.message)toast(r.message);if(!overlay.classList.contains('hidden')&&deviceTitle.textContent==='Инвентарь'&&r.ok)trigger('novera:cef:device:close')};
-  window.noveraWorldState=(raw)=>{const r=JSON.parse(raw);if(r.ok)world={jobs:r.jobs||[],family:r.family||null,faction:r.faction||null}};
+  window.noveraWorldState=(raw)=>{const r=JSON.parse(raw);if(!r.ok){if(r.code==='JOB_NOT_COMPLETABLE')toast('Задание ещё нельзя завершить. Выполняй его минимум 10 секунд.');else if(r.code==='JOB_ALREADY_ACTIVE')toast('У тебя уже есть активное задание.');else toast('Игровое действие отклонено.');return}if(r.jobs)world={jobs:r.jobs||[],family:r.family||null,faction:r.faction||null};if(r.jobKey&&r.token){activeJob={jobKey:r.jobKey,taskKey:r.taskKey,token:r.token};toast(`Работа начата: ${jobLabels[r.jobKey]||r.jobKey}`);if(deviceTitle.textContent==='Планшет')renderJobs()}if(r.reward){toast(`Задание выполнено. Выплата ${money(r.reward.pay)}`);activeJob=null;if(deviceTitle.textContent==='Планшет')renderJobs()}};
   window.noveraOpenDevice=(name)=>openDevice(name);
   setAuthMode('login');
 })();
