@@ -25,8 +25,22 @@ const versionFile = (await readFile(resolve(runtime,'VERSION'),'utf8')).trim();
 if (versionFile !== `NOVERA RP ${VERSION}`) throw new Error('runtime VERSION file mismatch');
 const start = await readFile(resolve(runtime,'START_HERE.txt'),'utf8');
 if (!start.includes(`NOVERA RP v${VERSION}`)) throw new Error('START_HERE version mismatch');
+
 const authHtml = await readFile(resolve(runtime,'client_packages/novera/cef/index.html'),'utf8');
 if (!authHtml.includes('auth-hotfix.css') || !authHtml.includes('auth-hotfix.js')) throw new Error('auth hotfix assets are not loaded');
+if (!authHtml.includes('id="age"') || authHtml.includes('id="birthDate"')) throw new Error('character creator must use age instead of birth date');
+
+const cefApp = await readFile(resolve(runtime,'client_packages/novera/cef/app.js'),'utf8');
+for (const bridge of ['novera:cef:character:create','novera:cef:job:start','novera:cef:job:finish','novera:cef:vehicle:spawn']) {
+  if (!cefApp.includes(bridge)) throw new Error(`CEF playable bridge missing: ${bridge}`);
+}
+if (!cefApp.includes('age:+$(\'age\').value')) throw new Error('CEF character create payload does not include age');
+
+const clientRuntime = await readFile(resolve(runtime,'client_packages/novera/client/index.js'),'utf8');
+for (const bridge of ['novera:cef:character:create','novera:cef:job:start','novera:cef:job:finish','novera:cef:vehicle:spawn']) {
+  if (!clientRuntime.includes(bridge)) throw new Error(`client playable bridge missing: ${bridge}`);
+}
+
 const authHotfix = await readFile(resolve(runtime,'client_packages/novera/cef/auth-hotfix.js'),'utf8');
 if (!authHotfix.includes('novera:cef:ready') || !authHotfix.includes('минимум 8')) throw new Error('auth hotfix validation/ready bridge missing');
 if (/CEF подключ|GTA5HOST|RAGE CEF bridge|Проверь консоль/i.test(authHotfix)) throw new Error('player-facing auth script still contains technical diagnostics');
@@ -35,6 +49,9 @@ if (!authCss.includes('backdrop-filter:none') || !authCss.includes('.server-meta
 
 const serverRuntime = await readFile(resolve(runtime,'packages/novera/index.js'),'utf8');
 if (/["']node:[^"']+["']/.test(serverRuntime)) throw new Error('GTA5HOST runtime still contains unsupported node:* builtin imports');
+for (const marker of ['job_sessions','job_completion_log','savePosition']) {
+  if (!serverRuntime.includes(marker)) throw new Error(`server playable runtime marker missing: ${marker}`);
+}
 
 const migrations = (await readdir(resolve(runtime,'migrations'))).filter((n)=>/^\d{4}_.+\.sql$/.test(n)).sort();
 if (migrations.length !== 10) throw new Error(`expected 10 migrations, got ${migrations.length}`);
@@ -42,6 +59,9 @@ const combined = await readFile(resolve(runtime,'migrations/ALL_MIGRATIONS.sql')
 for (const migration of migrations) if (!combined.includes(`-- ${migration}`)) throw new Error(`combined migration missing ${migration}`);
 if (/\bJSON\s+(?:NOT\s+)?NULL\b/i.test(combined)) throw new Error('legacy GTA5HOST MariaDB build must not declare JSON columns');
 if (/JSON_OBJECT\s*\(/i.test(combined)) throw new Error('legacy GTA5HOST MariaDB build must not use JSON_OBJECT in migrations');
+for (const table of ['job_sessions','job_completion_log','character_flags']) {
+  if (!combined.includes(`CREATE TABLE IF NOT EXISTS ${table}`)) throw new Error(`combined migration missing required playable table: ${table}`);
+}
 
 async function collectTs(dir) {
   const out = [];
@@ -58,4 +78,4 @@ for (const sourceFile of await collectTs(resolve(root, 'apps/server/src'))) {
   if (/JSON_OBJECT\s*\(/i.test(source)) throw new Error(`server source still uses JSON_OBJECT: ${sourceFile}`);
 }
 
-console.log(`NOVERA v${VERSION} GTA5HOST legacy-Node/auth UI validation passed`);
+console.log(`NOVERA v${VERSION} GTA5HOST playable runtime validation passed`);
