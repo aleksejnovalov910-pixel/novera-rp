@@ -48,6 +48,10 @@ function snapshot(player: PlayerMp) {
 async function boot(): Promise<void> {
   const started=Date.now(),config=loadConfig(),logger=new Logger('server',config.logLevel),db=createDatabase(config.databaseUrl),rateLimits=await createRateLimitStore(config.redisUrl),health=await db.healthcheck();
   const accounts=new AccountService(db),characters=new CharacterService(db),onboarding=new OnboardingService(db),gameplay=new GameplayService(db),jobs=new JobService(db),vehicles=new VehicleService(db),properties=new PropertyService(db),social=new SocialService(db),market=new MarketService(db),phone=new PhoneService(db),business=new BusinessService(db),government=new GovernmentService(db),admin=new AdminService(db),organizations=new OrganizationService(db),police=new PoliceService(db),medical=new MedicalService(db),progression=new ProgressionService(db),guard=new EventGuard();
+
+  const recoveredVehicles = await vehicles.recoverWorldState();
+  if (recoveredVehicles > 0) logger.info('recovered orphaned world vehicles',{count:recoveredVehicles});
+
   registerAuthEvents({accounts,characters,rateLimits,logger:logger.child('auth'),maxAttempts:config.authMaxAttempts,lockSeconds:config.authLockSeconds});
   registerCharacterEvents({characters,onboarding,logger:logger.child('characters')});
   registerGameplayEvents({gameplay,logger:logger.child('gameplay')});
