@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fwAllConfigs>
+  <ConfigArray>
+    <Item>
+      <Build>Any</Build>
+      <Platforms>Any</Platforms>
+      <Config type="CGameConfig">
+        <PoolSizes>
+          <Entries>
+            <Item>
+              <PoolName>StaticBounds</PoolName>
+              <PoolSize value="60000" />
+            </Item>
+            <Item>
+              <PoolName>TxdStore</PoolName>
+              <PoolSize value="8000" />
+            </Item>
+          </Entries>
+        </PoolSizes>
+      </Config>
+    </Item>
+  </ConfigArray>
+</fwAllConfigs>

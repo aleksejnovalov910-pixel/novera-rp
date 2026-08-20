@@ -1,5 +1,5 @@
-import { randomBytes, scrypt as nodeScrypt, timingSafeEqual } from 'node:crypto';
-import { promisify } from 'node:util';
+import { randomBytes, scrypt as nodeScrypt, timingSafeEqual } from 'crypto';
+import { promisify } from 'util';
 import { accounts, eq, type NoveraDatabase } from '@novera/database';
 
 const scrypt = promisify(nodeScrypt);
