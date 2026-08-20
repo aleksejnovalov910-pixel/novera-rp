@@ -9,5 +9,6 @@ function load(path) {
 
 load('./playable-baseline.js');
 load('./gameplay.js');
+load('./commands.js');
 
 console.log('[NOVERA] core loaded');
