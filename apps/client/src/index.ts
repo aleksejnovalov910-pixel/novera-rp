@@ -94,7 +94,11 @@ mp.events.add(AuthEvents.characters,(p:string)=>execute('window.noveraCharacters
 mp.events.add(CharacterEvents.list,(p:string)=>execute('window.noveraCharacters',p));
 mp.events.add(CharacterEvents.result,(p:string)=>execute('window.noveraCharacterResult',p));
 mp.events.add(CharacterEvents.creatorOpen,(slot:number)=>{openCreatorCamera();ensureBrowser().execute(`window.noveraOpenCreator?.(${Number(slot)})`)});
-mp.events.add(CharacterEvents.selected,(p:string)=>{closeAuthCamera();closeCreatorCamera();characterActive=true;setNativeUiVisible(true);execute('window.noveraCharacterSelected',p);mp.gui.cursor.show(false,false);mp.events.callRemote(GameplayEvents.bootstrap);mp.events.callRemote(WorldEvents.request)});
+mp.events.add(CharacterEvents.selected,(p:string)=>{
+  closeAuthCamera();closeCreatorCamera();characterActive=true;setNativeUiVisible(true);
+  try{const selected=JSON.parse(p) as Partial<CharacterCreatorPreview>;if((selected.gender==='male'||selected.gender==='female')&&selected.appearance)applyAppearance(selected as CharacterCreatorPreview)}catch{}
+  execute('window.noveraCharacterSelected',p);mp.gui.cursor.show(false,false);mp.events.callRemote(GameplayEvents.bootstrap);mp.events.callRemote(WorldEvents.request)
+});
 mp.events.add(GameplayEvents.state,(p:string)=>execute('window.noveraGameplayState',p));
 mp.events.add(WorldEvents.result,(p:string)=>execute('window.noveraWorldState',p));
 mp.events.add(PhoneEvents.state,(p:string)=>execute('window.noveraPhoneState',p));
