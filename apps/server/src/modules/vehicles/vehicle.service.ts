@@ -46,6 +46,11 @@ export class VehicleService {
     };
   }
 
+  async recoverWorldState(): Promise<number> {
+    const [result] = await this.db.pool.execute<any>('UPDATE owned_vehicles SET stored = 1 WHERE stored = 0 AND impounded = 0');
+    return Number(result.affectedRows ?? 0);
+  }
+
   async getOwned(characterId: bigint, vehicleId: bigint): Promise<OwnedVehicleRecord | null> {
     const [rows] = await this.db.pool.query<any[]>('SELECT * FROM owned_vehicles WHERE id = ? AND character_id = ? LIMIT 1', [vehicleId, characterId]);
     return rows[0] ? this.map(rows[0]) : null;
