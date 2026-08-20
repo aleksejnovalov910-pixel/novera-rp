@@ -7,6 +7,15 @@ function characterId(player: PlayerMp): bigint | null { const raw=player.getVari
 function send(player: PlayerMp,result:GameplayResult):void{player.call(GameplayEvents.state,[JSON.stringify(result)])}
 
 export function registerGameplayEvents(deps: Dependencies): void {
+  const saveInFlight=new Set<number>();
+  const savePlayerPosition=async(player:PlayerMp,reason:'autosave'|'quit'):Promise<void>=>{
+    const id=characterId(player);if(!id||saveInFlight.has(player.id))return;
+    saveInFlight.add(player.id);
+    try{const p=player.position;await deps.gameplay.savePosition(id,p.x,p.y,p.z,player.heading,player.dimension)}
+    catch(error){deps.logger.error('character position save failed',{characterId:id.toString(),player:player.name,reason,error:String(error)})}
+    finally{saveInFlight.delete(player.id)}
+  };
+
   mp.events.add(GameplayEvents.bootstrap, async (player: PlayerMp) => {
     const id=characterId(player); if(!id)return send(player,{ok:false,code:'NO_CHARACTER',message:'Персонаж не выбран.'});
     try{send(player,{ok:true,code:'OK',message:'Состояние загружено.',payload:await deps.gameplay.bootstrap(id)})}catch(error){deps.logger.error('gameplay bootstrap failed',{characterId:id.toString(),error:String(error)});send(player,{ok:false,code:'INTERNAL_ERROR',message:'Не удалось загрузить состояние.'})}
@@ -26,5 +35,6 @@ export function registerGameplayEvents(deps: Dependencies): void {
   mp.events.add(GameplayEvents.inventorySplit,async(player:PlayerMp,fromRaw:number,toRaw:number,amountRaw:number)=>{const id=characterId(player);if(!id)return send(player,{ok:false,code:'NO_CHARACTER',message:'Персонаж не выбран.'});try{const ok=await deps.gameplay.splitInventory(id,Number(fromRaw),Number(toRaw),Number(amountRaw));send(player,{ok,code:ok?'OK':'REJECTED',message:ok?'Стак разделён.':'Не удалось разделить предмет.'})}catch(error){deps.logger.error('inventory split failed',{characterId:id.toString(),error:String(error)});send(player,{ok:false,code:'INTERNAL_ERROR',message:'Не удалось разделить предмет.'})}});
   mp.events.add(GameplayEvents.inventoryUse,async(player:PlayerMp,slotRaw:number)=>{const id=characterId(player);if(!id)return send(player,{ok:false,code:'NO_CHARACTER',message:'Персонаж не выбран.'});try{const result=await deps.gameplay.useInventory(id,Number(slotRaw));send(player,{ok:Boolean(result),code:result?'OK':'REJECTED',message:result?'Предмет использован.':'Предмет нельзя использовать.',payload:result??undefined})}catch(error){deps.logger.error('inventory use failed',{characterId:id.toString(),error:String(error)});send(player,{ok:false,code:'INTERNAL_ERROR',message:'Не удалось использовать предмет.'})}});
 
-  mp.events.add('playerQuit',async(player:PlayerMp)=>{const id=characterId(player);if(!id)return;try{const p=player.position;await deps.gameplay.savePosition(id,p.x,p.y,p.z,player.heading,player.dimension)}catch(error){deps.logger.error('position save on quit failed',{characterId:id.toString(),error:String(error)})}});
+  mp.events.add('playerQuit',(player:PlayerMp)=>{void savePlayerPosition(player,'quit')});
+  setInterval(()=>{mp.players.forEach((player:PlayerMp)=>{void savePlayerPosition(player,'autosave')})},30000);
 }
