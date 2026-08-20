@@ -133,7 +133,7 @@ export class GameplayService {
 
   async savePosition(characterId: bigint, x: number, y: number, z: number, heading: number, dimension: number): Promise<void> {
     if (![x, y, z, heading, dimension].every(Number.isFinite)) return;
-    await this.db.pool.execute('UPDATE characters SET pos_x = ?, pos_y = ?, pos_z = ?, heading = ?, dimension = ? WHERE id = ?', [x, y, z, heading, Math.max(0, Math.trunc(dimension)), characterId]);
+    await this.db.pool.execute('UPDATE characters SET pos_x = ?, pos_y = ?, pos_z = ?, heading = ?, dimension = ?, last_played_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL', [x, y, z, heading, Math.max(0, Math.trunc(dimension)), characterId]);
   }
 
   private validAmount(amount: number): boolean { return Number.isSafeInteger(amount) && amount > 0 && amount <= MAX_MONEY; }
