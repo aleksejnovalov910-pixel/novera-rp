@@ -41,7 +41,18 @@ async function boot(): Promise<void> {
   registerExtendedEvents({phone,business,government,admin,guard,logger:logger.child('extended')});
   registerRoleplayEvents({organizations,police,medical,progression,guard,logger:logger.child('roleplay')});
   mp.events.add('playerJoin',(player:PlayerMp)=>{player.dimension=1000+player.id;logger.info('player connected',{player:player.name,id:player.id})});
-  mp.events.add('playerQuit',(player:PlayerMp,exitType:string,reason:string)=>logger.info('player disconnected',{player:player.name,exitType,reason}));
+  mp.events.add('playerQuit',(player:PlayerMp,exitType:string,reason:string)=>{
+    const rawCharacterId=player.getVariable('characterId');
+    if(rawCharacterId){
+      try{
+        const characterId=BigInt(String(rawCharacterId));
+        const position=player.position;
+        void characters.savePosition(characterId,{x:position.x,y:position.y,z:position.z,heading:Number(player.heading)||0,dimension:Number(player.dimension)||0})
+          .catch((error)=>logger.error('character position save failed',{characterId:characterId.toString(),player:player.name,error:String(error)}));
+      }catch(error){logger.warn('invalid character id on disconnect',{player:player.name,error:String(error)});}
+    }
+    logger.info('player disconnected',{player:player.name,exitType,reason});
+  });
   logger.info('NOVERA RP bootstrap ready',{environment:config.environment,maxPlayers:config.maxPlayers,dbLatencyMs:health.latencyMs,rateLimitStore:rateLimits.mode,bootMs:Date.now()-started});
 }
 void boot().catch((error)=>{console.error(JSON.stringify({timestamp:new Date().toISOString(),level:'error',scope:'server',message:'fatal bootstrap error',error:String(error)}));process.exitCode=1});
