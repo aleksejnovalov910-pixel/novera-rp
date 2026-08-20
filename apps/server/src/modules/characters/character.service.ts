@@ -16,6 +16,14 @@ const DEFAULT_APPEARANCE: CharacterAppearance = {
   eyeColor: 0
 };
 
+export interface CharacterPositionSnapshot {
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  dimension: number;
+}
+
 export class CharacterService {
   constructor(private readonly db: NoveraDatabase) {}
 
@@ -102,6 +110,20 @@ export class CharacterService {
     if (!row) return null;
     await this.db.orm.update(characters).set({ lastPlayedAt: new Date() }).where(eq(characters.id, row.id));
     return row;
+  }
+
+  async savePosition(characterId: bigint, snapshot: CharacterPositionSnapshot): Promise<void> {
+    if (![snapshot.x, snapshot.y, snapshot.z, snapshot.heading, snapshot.dimension].every(Number.isFinite)) {
+      throw new Error('Cannot persist non-finite character position');
+    }
+    await this.db.orm.update(characters).set({
+      posX: snapshot.x,
+      posY: snapshot.y,
+      posZ: snapshot.z,
+      heading: snapshot.heading,
+      dimension: Math.max(0, Math.trunc(snapshot.dimension)),
+      lastPlayedAt: new Date()
+    }).where(and(eq(characters.id, characterId), isNull(characters.deletedAt)));
   }
 
   async softDelete(accountId: bigint, characterId: bigint): Promise<boolean> {
