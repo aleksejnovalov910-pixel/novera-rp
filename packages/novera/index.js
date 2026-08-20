@@ -2,12 +2,12 @@
 
 console.log('[NOVERA] core loading...');
 
-// Playable baseline comes first. Individual production modules can replace
-// these fallbacks without changing the package entry point.
-try {
-  require('./playable-baseline.js');
-} catch (e) {
-  console.log('[NOVERA] baseline load error:', e && e.stack ? e.stack : e);
+function load(path) {
+  try { require(path); }
+  catch (e) { console.log('[NOVERA] module error ' + path + ':', e && e.stack ? e.stack : e); }
 }
+
+load('./playable-baseline.js');
+load('./gameplay.js');
 
 console.log('[NOVERA] core loaded');
