@@ -17,6 +17,8 @@ function ensureBrowser(): BrowserMp { uiBrowser ??= mp.browsers.new('package://n
 function execute(fn: string, payload?: string): void { ensureBrowser().execute(payload === undefined ? `${fn}?.()` : `${fn}?.(${JSON.stringify(payload)})`); }
 function setNativeUiVisible(visible:boolean): void { mp.game.ui.displayHud(visible); mp.game.ui.displayRadar(visible); try { mp.gui.chat.show(visible); } catch {} }
 function showAuthCursor(): void { if(authActive && !characterActive) mp.gui.cursor.show(true,true); }
+function clampInt(value: unknown, min: number, max: number, fallback: number): number { const parsed = Math.trunc(Number(value)); return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback; }
+function clampUnit(value: unknown, fallback = 0.5): number { const parsed = Number(value); return Number.isFinite(parsed) ? Math.max(0, Math.min(1, parsed)) : fallback; }
 function openAuthCamera(): void {
   authActive = true;
   characterActive = false;
@@ -42,7 +44,37 @@ function closeAuthCamera(): void {
 function updateCreatorCamera(): void { if(!creatorCamera)return; const r=creatorYaw*Math.PI/180; const x=CREATOR_TARGET.x+Math.sin(r)*creatorZoom,y=CREATOR_TARGET.y+Math.cos(r)*creatorZoom; creatorCamera.setCoord(x,y,CREATOR_TARGET.z+.55); creatorCamera.pointAtCoord(CREATOR_TARGET.x,CREATOR_TARGET.y,CREATOR_TARGET.z+.35); }
 function openCreatorCamera(): void { closeAuthCamera();creatorActive=true;creatorYaw=180;creatorZoom=2.15;setNativeUiVisible(false);mp.players.local.freezePosition(true);mp.players.local.setAlpha(255);creatorCamera?.destroy();creatorCamera=mp.cameras.new('default',new mp.Vector3(402.89,-999,-97.7),new mp.Vector3(0,0,0),38);creatorCamera.setActive(true);updateCreatorCamera();mp.game.cam.renderScriptCams(true,false,0,true,false);mp.gui.cursor.show(true,true); }
 function closeCreatorCamera(): void { creatorActive=false;mp.players.local.freezePosition(false);if(creatorCamera){creatorCamera.setActive(false);creatorCamera.destroy();creatorCamera=null}mp.game.cam.renderScriptCams(false,false,0,true,false); }
-function applyAppearance(preview: CharacterCreatorPreview): void { const p=mp.players.local,hash=mp.game.joaat(preview.gender==='female'?'mp_f_freemode_01':'mp_m_f_freemode_01'); const apply=()=>{p.setHeadBlendData(preview.appearance.mother,preview.appearance.father,0,preview.appearance.mother,preview.appearance.father,0,preview.appearance.resemblance,preview.appearance.skinMix,0,false);p.setComponentVariation(2,preview.appearance.hair,0,0);p.setHairColor(preview.appearance.hairColor,preview.appearance.hairColor);p.setHeadOverlay(2,preview.appearance.eyebrow,1,0,0);p.setHeadOverlayColor(2,1,preview.appearance.eyebrowColor,preview.appearance.eyebrowColor);p.setHeadOverlay(1,preview.gender==='male'?preview.appearance.beard:255,1,0,0);if(preview.gender==='male')p.setHeadOverlayColor(1,1,preview.appearance.beardColor,preview.appearance.beardColor);p.setEyeColor(preview.appearance.eyeColor);p.setComponentVariation(3,15,0,0);p.setComponentVariation(4,preview.gender==='female'?15:21,0,0);p.setComponentVariation(6,preview.gender==='female'?5:34,0,0);p.setComponentVariation(8,15,0,0);p.setComponentVariation(11,15,0,0)}; if(p.model!==hash){p.model=hash;setTimeout(apply,120)}else apply(); }
+function applyAppearance(preview: CharacterCreatorPreview): void {
+  const p=mp.players.local;
+  const hash=mp.game.joaat(preview.gender==='female'?'mp_f_freemode_01':'mp_m_f_freemode_01');
+  const mother=clampInt(preview.appearance?.mother,0,45,21);
+  const father=clampInt(preview.appearance?.father,0,45,0);
+  const resemblance=clampUnit(preview.appearance?.resemblance,0.5);
+  const skinMix=clampUnit(preview.appearance?.skinMix,0.5);
+  const hair=clampInt(preview.appearance?.hair,0,255,0);
+  const hairColor=clampInt(preview.appearance?.hairColor,0,63,0);
+  const eyebrow=clampInt(preview.appearance?.eyebrow,0,33,0);
+  const eyebrowColor=clampInt(preview.appearance?.eyebrowColor,0,63,0);
+  const beard=clampInt(preview.appearance?.beard,0,28,0);
+  const beardColor=clampInt(preview.appearance?.beardColor,0,63,0);
+  const eyeColor=clampInt(preview.appearance?.eyeColor,0,31,0);
+  const apply=()=>{
+    p.setHeadBlendData(mother,father,0,mother,father,0,resemblance,skinMix,0,false);
+    p.setComponentVariation(2,hair,0,0);
+    p.setHairColor(hairColor,hairColor);
+    p.setHeadOverlay(2,eyebrow,1,0,0);
+    p.setHeadOverlayColor(2,1,eyebrowColor,eyebrowColor);
+    p.setHeadOverlay(1,preview.gender==='male'?beard:255,1,0,0);
+    if(preview.gender==='male')p.setHeadOverlayColor(1,1,beardColor,beardColor);
+    p.setEyeColor(eyeColor);
+    p.setComponentVariation(3,15,0,0);
+    p.setComponentVariation(4,preview.gender==='female'?15:21,0,0);
+    p.setComponentVariation(6,preview.gender==='female'?5:34,0,0);
+    p.setComponentVariation(8,15,0,0);
+    p.setComponentVariation(11,15,0,0);
+  };
+  if(p.model!==hash){p.model=hash;setTimeout(apply,120)}else apply();
+}
 function openDevice(name: 'phone'|'tablet'|'inventory'|'settings'): void { if(!characterActive)return;deviceOpen=true;mp.gui.cursor.show(true,true);ensureBrowser().execute(`window.noveraOpenDevice?.(${JSON.stringify(name)})`);if(name==='phone')mp.events.callRemote(PhoneEvents.state);if(name==='tablet')mp.events.callRemote(WorldEvents.request); }
 function closeDevice(): void { deviceOpen=false;mp.gui.cursor.show(false,false); }
 
